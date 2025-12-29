@@ -10,7 +10,7 @@ export default async function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen px-4 py-8">
+    <div className="px-4">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Profile</h1>
         <ProfileContent user={user} />

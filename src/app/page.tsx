@@ -12,7 +12,7 @@ export default async function Home() {
   const message = error ? "Error loading greeting" : data?.message ?? "No greeting found";
 
   return (
-    <main className="flex min-h-screen items-center justify-center">
+    <main className="flex justify-center px-4">
       <h1 className="text-4xl font-bold">{message}</h1>
     </main>
   );
