@@ -309,7 +309,7 @@ export async function createSamplePerson(): Promise<{ success: boolean; person?:
     .insert({
       user_id: user.id,
       name: 'Alex (Sample)',
-      vibe_summary: 'Example person to show how insights work',
+      vibe_summary: 'Thoughtful collaborator who values clear communication and context (sample)',
       updated_at: new Date().toISOString(),
     })
     .select()
