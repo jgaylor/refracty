@@ -3,12 +3,15 @@
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
+import { AppearanceSettings } from './AppearanceSettings';
+import type { AppearancePreference } from '@/lib/supabase/profile';
 
 interface ProfileContentProps {
   user: User;
+  appearance?: AppearancePreference;
 }
 
-export function ProfileContent({ user }: ProfileContentProps) {
+export function ProfileContent({ user, appearance }: ProfileContentProps) {
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -19,35 +22,52 @@ export function ProfileContent({ user }: ProfileContentProps) {
   };
 
   return (
-    <div className="card space-y-6">
-      <div>
-        <h2 className="text-sm font-medium text-neutral-500 mb-1">Email</h2>
-        <p className="text-lg text-neutral-900">{user.email}</p>
-      </div>
-
-      <div>
-        <h2 className="text-sm font-medium text-neutral-500 mb-1">User ID</h2>
-        <p className="text-sm text-neutral-600 font-mono">{user.id}</p>
-      </div>
-
-      {user.user_metadata?.full_name && (
+    <div className="space-y-6">
+      {/* Account Information */}
+      <div className="card space-y-6">
         <div>
-          <h2 className="text-sm font-medium text-neutral-500 mb-1">Name</h2>
-          <p className="text-lg text-neutral-900">{user.user_metadata.full_name}</p>
+          <h2 className="text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Email</h2>
+          <p className="text-lg" style={{ color: 'var(--text-primary)' }}>{user.email}</p>
         </div>
-      )}
 
-      <div>
-        <h2 className="text-sm font-medium text-neutral-500 mb-1">Account Created</h2>
-        <p className="text-sm text-neutral-600">
-          {new Date(user.created_at).toLocaleDateString()}
-        </p>
+        <div>
+          <h2 className="text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>User ID</h2>
+          <p className="text-sm font-mono" style={{ color: 'var(--text-secondary)' }}>{user.id}</p>
+        </div>
+
+        {user.user_metadata?.full_name && (
+          <div>
+            <h2 className="text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Name</h2>
+            <p className="text-lg" style={{ color: 'var(--text-primary)' }}>{user.user_metadata.full_name}</p>
+          </div>
+        )}
+
+        <div>
+          <h2 className="text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Account Created</h2>
+          <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            {new Date(user.created_at).toLocaleDateString()}
+          </p>
+        </div>
       </div>
 
-      <div className="pt-4 border-t border-neutral-200">
-        <button onClick={handleLogout} className="btn-danger">
-          Logout
-        </button>
+      {/* Preferences */}
+      <div className="card space-y-6">
+        <div>
+          <h2 className="text-lg font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>Preferences</h2>
+        </div>
+        
+        <div className="pt-4 border-t" style={{ borderColor: 'var(--border-color)' }}>
+          <AppearanceSettings initialAppearance={appearance} />
+        </div>
+      </div>
+
+      {/* Logout */}
+      <div className="card">
+        <div className="pt-4 border-t" style={{ borderColor: 'var(--border-color)' }}>
+          <button onClick={handleLogout} className="btn-danger">
+            Logout
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -3,6 +3,37 @@
 @tailwind utilities;
 
 @layer base {
+  /* CSS Variables for Theming - Light Mode (default) */
+  :root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #fafafa;
+    --bg-tertiary: #f5f5f5;
+    --text-primary: #262626;
+    --text-secondary: #525252;
+    --text-tertiary: #737373;
+    --border-color: #e5e5e5;
+    --border-color-light: #f5f5f5;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+  }
+
+  /* CSS Variables for Theming - Dark Mode */
+  [data-theme="dark"] {
+    --bg-primary: #171717;
+    --bg-secondary: #262626;
+    --bg-tertiary: #404040;
+    --text-primary: #e5e5e5;
+    --text-secondary: #a3a3a3;
+    --text-tertiary: #737373;
+    --border-color: #404040;
+    --border-color-light: #262626;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+  }
+
+  /* Apply theme variables to body */
+  body {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+  }
   /* Ensure text selection is enabled, but exclude form controls */
   * {
     -webkit-user-select: text;
@@ -89,15 +120,28 @@
   }
 
   .btn-secondary {
-    @apply btn bg-neutral-200 text-neutral-900 hover:bg-neutral-300 focus:ring-neutral-400;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+  }
+  .btn-secondary:hover {
+    background-color: var(--border-color);
   }
 
   .btn-outline {
-    @apply btn border border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-50 focus:ring-neutral-400;
+    border-color: var(--border-color);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+  }
+  .btn-outline:hover {
+    background-color: var(--bg-secondary);
   }
 
   .btn-ghost {
-    @apply btn bg-transparent text-neutral-700 hover:bg-neutral-100 focus:ring-neutral-400;
+    background-color: transparent;
+    color: var(--text-secondary);
+  }
+  .btn-ghost:hover {
+    background-color: var(--bg-tertiary);
   }
 
   .btn-danger {
@@ -106,16 +150,23 @@
 
   /* Form Inputs */
   .input {
-    @apply w-full px-4 py-2 rounded-md border border-neutral-300 bg-white text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent;
+    background-color: var(--bg-primary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+  }
+  .input::placeholder {
+    color: var(--text-tertiary);
   }
 
   .label {
-    @apply block text-sm font-medium text-neutral-700 mb-1;
+    color: var(--text-secondary);
   }
 
   /* Cards */
   .card {
-    @apply bg-white rounded-md shadow p-6;
+    @apply rounded-md shadow p-6;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
   }
 
   /* Alerts */
@@ -137,6 +188,22 @@
   }
 
   .link-secondary {
-    @apply text-neutral-700 hover:text-primary transition-colors;
+    color: var(--text-secondary);
+  }
+  .link-secondary:hover {
+    color: var(--text-primary);
+  }
+
+  /* Sidebar */
+  .sidebar-bg {
+    background-color: var(--bg-primary);
+    border-color: var(--border-color);
+  }
+
+  .sidebar-link {
+    color: var(--text-secondary);
+  }
+  .sidebar-link:hover {
+    background-color: var(--bg-tertiary);
   }
 }
