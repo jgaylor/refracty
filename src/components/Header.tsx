@@ -30,12 +30,14 @@ export function Header() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push('/');
-    router.refresh();
-  };
+  // Don't render header when logged in (sidebar is main navigation)
+  if (loading) {
+    return null;
+  }
+
+  if (user) {
+    return null;
+  }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm border-b border-neutral-200">
@@ -48,27 +50,12 @@ export function Header() {
           </div>
 
           <div className="flex items-center gap-4">
-            {loading ? (
-              <span className="text-neutral-500">Loading...</span>
-            ) : user ? (
-              <>
-                <Link href="/profile" className="link-secondary">
-                  {user.email}
-                </Link>
-                <button onClick={handleLogout} className="btn-ghost">
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                <Link href="/login" className="link-secondary">
-                  Sign In
-                </Link>
-                <Link href="/signup" className="btn-primary">
-                  Sign Up
-                </Link>
-              </>
-            )}
+            <Link href="/login" className="link-secondary">
+              Sign In
+            </Link>
+            <Link href="/signup" className="btn-primary">
+              Sign Up
+            </Link>
           </div>
         </div>
       </nav>
