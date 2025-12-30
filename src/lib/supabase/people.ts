@@ -243,16 +243,22 @@ export async function createSamplePerson(): Promise<{ success: boolean; person?:
   const supabase = await createClient();
 
   // Check if sample person already exists
-  const { data: existingSample } = await supabase
+  const { data: existingSample, error: existingError } = await supabase
     .from('people')
     .select('id')
     .eq('user_id', user.id)
     .eq('name', 'Alex (Sample)')
-    .single();
+    .maybeSingle();
 
   if (existingSample) {
     // Sample person already exists, return success
     return { success: true, person: existingSample as Person };
+  }
+  
+  // If error occurred and it's not "no rows found", return error
+  if (existingError && existingError.code !== 'PGRST116') {
+    console.error('Error checking for existing sample person:', existingError);
+    return { success: false, error: existingError.message };
   }
 
   // Create the sample person

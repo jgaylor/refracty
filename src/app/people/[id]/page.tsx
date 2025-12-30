@@ -1,8 +1,9 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getPersonById, getNotesByPerson } from '@/lib/supabase/people';
 import { getInsightsByPerson } from '@/lib/supabase/insights';
 import { PersonDetailClient } from '@/components/people/PersonDetailClient';
 import { PersonPageHeader } from '@/components/people/PersonPageHeader';
+import { getUser } from '@/lib/supabase/auth';
 
 interface PersonPageProps {
   params: Promise<{
@@ -11,6 +12,15 @@ interface PersonPageProps {
 }
 
 export default async function PersonPage({ params }: PersonPageProps) {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'people/[id]/page.tsx:13',message:'PersonPage render start',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+  // #endregion
+  
+  const user = await getUser();
+  if (!user) {
+    redirect('/login');
+  }
+  
   const { id } = await params;
   const person = await getPersonById(id);
 

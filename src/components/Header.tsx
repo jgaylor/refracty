@@ -51,7 +51,7 @@ export function Header() {
 
           <div className="flex items-center gap-4">
             <Link href="/login" className="link-secondary">
-              Sign In
+              Log In
             </Link>
             <Link href="/signup" className="btn-primary">
               Sign Up

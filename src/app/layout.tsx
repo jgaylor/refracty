@@ -36,9 +36,12 @@ export default async function RootLayout({
   // #endregion
   const user = await getUser();
   // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'layout.tsx:31',message:'After getUser',data:{hasUser:!!user,isLoggedIn:!!user},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'layout.tsx:37',message:'After getUser',data:{hasUser:!!user,userId:user?.id,userEmail:user?.email,isLoggedIn:!!user},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
   // #endregion
   const isLoggedIn = !!user;
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'layout.tsx:41',message:'isLoggedIn calculated',data:{isLoggedIn,willRenderSidebar:isLoggedIn,willRenderLoggedOut:!isLoggedIn},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+  // #endregion
   let profile = null;
   try {
     profile = isLoggedIn ? await getUserProfile() : null;
@@ -68,7 +71,10 @@ export default async function RootLayout({
           <Header />
           {isLoggedIn ? (
             <div className="flex flex-1 min-h-0">
-              <Sidebar />
+              {/* #region agent log */}
+              {(() => { fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'layout.tsx:69',message:'Rendering Sidebar with initialUser',data:{hasInitialUser:!!user,initialUserId:user?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{}); return null; })()}
+              {/* #endregion */}
+              <Sidebar initialUser={user} />
               <main className="flex-1 min-w-0 pt-8 pb-32 overflow-auto [scrollbar-gutter:stable]">
                 {children}
                 <InsightCapture />

@@ -17,17 +17,26 @@ export function LoginForm() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginForm.tsx:16',message:'Login attempt started',data:{email},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
 
     const supabase = createClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginForm.tsx:25',message:'Login result',data:{hasError:!!signInError,errorMessage:signInError?.message,hasSession:!!data?.session,hasUser:!!data?.user,userId:data?.user?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+    // #endregion
 
     if (signInError) {
       setError(signInError.message);
       setLoading(false);
     } else {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginForm.tsx:32',message:'Login success, redirecting',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+      // #endregion
       router.push('/');
       router.refresh();
     }
@@ -46,7 +55,7 @@ export function LoginForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="input"
+            className="input w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
 
@@ -61,7 +70,7 @@ export function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="input pr-10"
+              className="input w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary pr-10"
             />
             <button
               type="button"
@@ -94,7 +103,7 @@ export function LoginForm() {
           disabled={loading}
           className="btn-primary w-full"
         >
-          {loading ? 'Signing in...' : 'Sign In'}
+          {loading ? 'Logging in...' : 'Log In'}
         </button>
       </form>
 

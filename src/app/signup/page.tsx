@@ -1,6 +1,13 @@
 import { SignupForm } from '@/components/auth/SignupForm';
+import { getUser } from '@/lib/supabase/auth';
+import { redirect } from 'next/navigation';
 
-export default function SignupPage() {
+export default async function SignupPage() {
+  const user = await getUser();
+  if (user) {
+    redirect('/people');
+  }
+  
   return (
     <div className="flex justify-center px-4">
       <div className="w-full max-w-xs">

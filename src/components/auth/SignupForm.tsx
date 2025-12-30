@@ -55,7 +55,7 @@ export function SignupForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="input"
+            className="input w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
 
@@ -71,7 +71,7 @@ export function SignupForm() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="input pr-10"
+              className="input w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary pr-10"
             />
             <button
               type="button"
@@ -111,7 +111,7 @@ export function SignupForm() {
       <p className="mt-6 text-center text-sm text-neutral-600">
         Already have an account?{' '}
         <Link href="/login" className="link font-medium">
-          Sign in
+          Log in
         </Link>
       </p>
     </div>
