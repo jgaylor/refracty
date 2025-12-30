@@ -8,6 +8,7 @@ interface PersonSelectionModalProps {
   onClose: () => void;
   onSelect: (personId: string) => void;
   people: PersonWithNote[];
+  onAddPerson?: () => void;
 }
 
 export function PersonSelectionModal({
@@ -15,6 +16,7 @@ export function PersonSelectionModal({
   onClose,
   onSelect,
   people,
+  onAddPerson,
 }: PersonSelectionModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -110,7 +112,21 @@ export function PersonSelectionModal({
 
         {/* People List */}
         <div className="max-h-96 overflow-y-auto p-2">
-          {filteredPeople.length === 0 ? (
+          {people.length === 0 ? (
+            <div className="text-center py-8 px-4">
+              <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
+                No people yet. Add someone to get started.
+              </p>
+              {onAddPerson && (
+                <button
+                  onClick={onAddPerson}
+                  className="btn-primary px-4 py-2 rounded-md"
+                >
+                  Add Person
+                </button>
+              )}
+            </div>
+          ) : filteredPeople.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-neutral-500">No people found.</p>
             </div>

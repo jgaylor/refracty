@@ -6,8 +6,8 @@ export function getThemeScript() {
   return `
     (function() {
       try {
-        var appearance = localStorage.getItem('appearance-preference') || 'system';
-        var theme = 'light';
+        var appearance = localStorage.getItem('appearance-preference') || 'dark';
+        var theme = 'dark';
         
         if (appearance === 'light') {
           theme = 'light';
@@ -20,8 +20,8 @@ export function getThemeScript() {
         
         document.documentElement.setAttribute('data-theme', theme);
       } catch (e) {
-        // Fallback to light if anything fails
-        document.documentElement.setAttribute('data-theme', 'light');
+        // Fallback to dark if anything fails
+        document.documentElement.setAttribute('data-theme', 'dark');
       }
     })();
   `;

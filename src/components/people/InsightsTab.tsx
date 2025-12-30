@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Insight, InsightCategory } from '@/lib/supabase/insights';
 import { InsightSection } from './InsightSection';
+import { showSuccessToast, showErrorToast } from '@/lib/toast';
 
 interface InsightsTabProps {
   personId: string;
@@ -58,11 +59,17 @@ export function InsightsTab({ personId, initialInsights }: InsightsTabProps) {
       if (response.ok && result.success) {
         // Optimistically add the new insight
         setInsights((prev) => [...prev, result.insight]);
+        showSuccessToast('Insight added', {
+          href: `/people/${personId}`,
+          text: 'View person',
+        });
       } else {
         throw new Error(result.error || 'Failed to add insight');
       }
     } catch (error) {
       console.error('Error adding insight:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to add insight';
+      showErrorToast(errorMessage);
       throw error;
     } finally {
       setLoading(false);
@@ -87,11 +94,17 @@ export function InsightsTab({ personId, initialInsights }: InsightsTabProps) {
         setInsights((prev) =>
           prev.map((insight) => (insight.id === id ? result.insight : insight))
         );
+        showSuccessToast('Insight updated', {
+          href: `/people/${personId}`,
+          text: 'View person',
+        });
       } else {
         throw new Error(result.error || 'Failed to update insight');
       }
     } catch (error) {
       console.error('Error updating insight:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update insight';
+      showErrorToast(errorMessage);
       throw error;
     } finally {
       setLoading(false);
@@ -110,11 +123,14 @@ export function InsightsTab({ personId, initialInsights }: InsightsTabProps) {
       if (response.ok && result.success) {
         // Optimistically remove the insight
         setInsights((prev) => prev.filter((insight) => insight.id !== id));
+        showSuccessToast('Insight deleted');
       } else {
         throw new Error(result.error || 'Failed to delete insight');
       }
     } catch (error) {
       console.error('Error deleting insight:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete insight';
+      showErrorToast(errorMessage);
       throw error;
     } finally {
       setLoading(false);

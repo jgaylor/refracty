@@ -28,6 +28,169 @@ export interface UpdateInsightInput {
   content: string;
 }
 
+export interface InsightWithPerson extends Insight {
+  person: {
+    id: string;
+    name: string;
+  };
+}
+
+/**
+ * Get all insights for the current user with pagination
+ */
+export async function getAllInsights(
+  limit: number = 20,
+  offset: number = 0
+): Promise<{ insights: InsightWithPerson[]; hasMore: boolean }> {
+  const user = await getUser();
+  if (!user) {
+    return { insights: [], hasMore: false };
+  }
+
+  const supabase = await createClient();
+  
+  // Fetch insights with person data, ordered by most recent first
+  const { data, error } = await supabase
+    .from('insights')
+    .select(`
+      *,
+      people (
+        id,
+        name
+      )
+    `)
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) {
+    console.error('Error fetching insights:', error);
+    return { insights: [], hasMore: false };
+  }
+
+  // Check if there are more insights
+  const { count } = await supabase
+    .from('insights')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id);
+
+  const totalCount = count || 0;
+  const hasMore = offset + limit < totalCount;
+
+  // Transform the data to match InsightWithPerson interface
+  const insights: InsightWithPerson[] = (data || []).map((item: any) => {
+    const personData = Array.isArray(item.people) ? item.people[0] : item.people;
+    return {
+      ...item,
+      person: personData 
+        ? { id: personData.id, name: personData.name }
+        : { id: item.person_id, name: 'Unknown' },
+    };
+  });
+
+  return { insights, hasMore };
+}
+
+export interface NoteWithPerson {
+  id: string;
+  person_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  person: {
+    id: string;
+    name: string;
+  };
+}
+
+export type FeedItem = 
+  | ({ type: 'insight' } & InsightWithPerson)
+  | ({ type: 'note' } & NoteWithPerson);
+
+/**
+ * Get all notes and insights for the current user with pagination, combined and sorted
+ */
+export async function getAllNotesAndInsights(
+  limit: number = 20,
+  offset: number = 0
+): Promise<{ items: FeedItem[]; hasMore: boolean }> {
+  const user = await getUser();
+  if (!user) {
+    return { items: [], hasMore: false };
+  }
+
+  const supabase = await createClient();
+  
+  // Fetch insights with person data
+  const { data: insightsData, error: insightsError } = await supabase
+    .from('insights')
+    .select(`
+      *,
+      people (
+        id,
+        name
+      )
+    `)
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false });
+
+  // Fetch notes with person data
+  const { data: notesData, error: notesError } = await supabase
+    .from('notes')
+    .select(`
+      *,
+      people (
+        id,
+        name
+      )
+    `)
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false });
+
+  if (insightsError || notesError) {
+    console.error('Error fetching feed items:', insightsError || notesError);
+    return { items: [], hasMore: false };
+  }
+
+  // Transform insights
+  const insights: FeedItem[] = (insightsData || []).map((item: any) => {
+    const personData = Array.isArray(item.people) ? item.people[0] : item.people;
+    return {
+      type: 'insight' as const,
+      ...item,
+      person: personData 
+        ? { id: personData.id, name: personData.name }
+        : { id: item.person_id, name: 'Unknown' },
+    };
+  });
+
+  // Transform notes
+  const notes: FeedItem[] = (notesData || []).map((item: any) => {
+    const personData = Array.isArray(item.people) ? item.people[0] : item.people;
+    return {
+      type: 'note' as const,
+      ...item,
+      person: personData 
+        ? { id: personData.id, name: personData.name }
+        : { id: item.person_id, name: 'Unknown' },
+    };
+  });
+
+  // Combine and sort by created_at descending
+  const allItems = [...insights, ...notes].sort((a, b) => {
+    const dateA = new Date(a.created_at).getTime();
+    const dateB = new Date(b.created_at).getTime();
+    return dateB - dateA; // Descending
+  });
+
+  // Apply pagination
+  const paginatedItems = allItems.slice(offset, offset + limit);
+  const hasMore = offset + limit < allItems.length;
+
+  return { items: paginatedItems, hasMore };
+}
+
 /**
  * Get all insights for a specific person
  */

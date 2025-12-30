@@ -6,6 +6,7 @@ import { Footer } from "@/components/Footer";
 import { Sidebar } from "@/components/Sidebar";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { InsightCapture } from "@/components/InsightCapture";
+import { ToasterWrapper } from "@/components/ToasterWrapper";
 import { getUser } from "@/lib/supabase/auth";
 import { getUserProfile } from "@/lib/supabase/profile";
 import { getThemeScript } from "./theme-script";
@@ -63,6 +64,7 @@ export default async function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} h-full flex flex-col`}>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <ThemeProvider initialAppearance={profile?.appearance}>
+          <ToasterWrapper />
           <Header />
           {isLoggedIn ? (
             <div className="flex flex-1 min-h-0">

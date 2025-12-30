@@ -24,7 +24,13 @@ export function ProfileContent({ user, appearance }: ProfileContentProps) {
   return (
     <div className="space-y-6">
       {/* Account Information */}
-      <div className="card space-y-6">
+      <div 
+        className="p-6 rounded-lg border space-y-6"
+        style={{
+          backgroundColor: 'var(--bg-primary)',
+          borderColor: 'var(--border-color)',
+        }}
+      >
         <div>
           <h2 className="text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Email</h2>
           <p className="text-lg" style={{ color: 'var(--text-primary)' }}>{user.email}</p>
@@ -51,7 +57,13 @@ export function ProfileContent({ user, appearance }: ProfileContentProps) {
       </div>
 
       {/* Preferences */}
-      <div className="card space-y-6">
+      <div 
+        className="p-6 rounded-lg border space-y-6"
+        style={{
+          backgroundColor: 'var(--bg-primary)',
+          borderColor: 'var(--border-color)',
+        }}
+      >
         <div>
           <h2 className="text-lg font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>Preferences</h2>
         </div>
@@ -62,7 +74,13 @@ export function ProfileContent({ user, appearance }: ProfileContentProps) {
       </div>
 
       {/* Logout */}
-      <div className="card">
+      <div 
+        className="p-6 rounded-lg border"
+        style={{
+          backgroundColor: 'var(--bg-primary)',
+          borderColor: 'var(--border-color)',
+        }}
+      >
         <div className="pt-4 border-t" style={{ borderColor: 'var(--border-color)' }}>
           <button onClick={handleLogout} className="btn-danger">
             Logout

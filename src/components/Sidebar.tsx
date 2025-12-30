@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
+import { SidebarSkeleton } from './skeletons/SidebarSkeleton';
 
 // Icon components defined outside the main component
 const UsersIcon = ({ className }: { className?: string }) => (
@@ -50,8 +51,13 @@ export function Sidebar() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Show skeleton while loading
+  if (loading) {
+    return <SidebarSkeleton />;
+  }
+
   // Don't render if not logged in
-  if (loading || !user) {
+  if (!user) {
     return null;
   }
 
@@ -100,9 +106,9 @@ export function Sidebar() {
 
         {/* Settings */}
         <Link
-          href="/profile"
+          href="/settings"
           className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-            isActive('/profile')
+            isActive('/settings')
               ? 'bg-primary text-white'
               : 'sidebar-link'
           }`}

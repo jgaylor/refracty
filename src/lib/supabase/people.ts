@@ -191,3 +191,120 @@ export async function createPerson(
   return { success: true, person };
 }
 
+/**
+ * Delete a person
+ */
+export async function deletePerson(
+  personId: string
+): Promise<{ success: boolean; error?: string }> {
+  const user = await getUser();
+  if (!user) {
+    return { success: false, error: 'User not authenticated' };
+  }
+
+  const supabase = await createClient();
+  
+  // Verify person belongs to user before deleting
+  const { data: person, error: verifyError } = await supabase
+    .from('people')
+    .select('id')
+    .eq('id', personId)
+    .eq('user_id', user.id)
+    .single();
+
+  if (verifyError || !person) {
+    return { success: false, error: 'Person not found' };
+  }
+
+  // Delete the person (cascade will handle related notes/insights)
+  const { error } = await supabase
+    .from('people')
+    .delete()
+    .eq('id', personId)
+    .eq('user_id', user.id);
+
+  if (error) {
+    console.error('Error deleting person:', error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+/**
+ * Create a sample person with 3 sample insights for new users
+ */
+export async function createSamplePerson(): Promise<{ success: boolean; person?: Person; error?: string }> {
+  const user = await getUser();
+  if (!user) {
+    return { success: false, error: 'User not authenticated' };
+  }
+
+  const supabase = await createClient();
+
+  // Check if sample person already exists
+  const { data: existingSample } = await supabase
+    .from('people')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('name', 'Alex (Sample)')
+    .single();
+
+  if (existingSample) {
+    // Sample person already exists, return success
+    return { success: true, person: existingSample as Person };
+  }
+
+  // Create the sample person
+  const { data: person, error: personError } = await supabase
+    .from('people')
+    .insert({
+      user_id: user.id,
+      name: 'Alex (Sample)',
+      vibe_summary: 'Example person to show how insights work',
+      updated_at: new Date().toISOString(),
+    })
+    .select()
+    .single();
+
+  if (personError) {
+    console.error('Error creating sample person:', personError);
+    return { success: false, error: personError.message };
+  }
+
+  // Create 3 sample insights
+  const sampleInsights = [
+    {
+      category: 'motivated_by' as const,
+      content: 'Likes to see progress and impact of their work',
+    },
+    {
+      category: 'preferred_communication' as const,
+      content: 'Prefers async updates via Slack, but appreciates quick syncs for blockers',
+    },
+    {
+      category: 'works_best_when' as const,
+      content: 'Has clear context and can focus without interruptions',
+    },
+  ];
+
+  for (const insight of sampleInsights) {
+    const { error: insightError } = await supabase
+      .from('insights')
+      .insert({
+        person_id: person.id,
+        user_id: user.id,
+        category: insight.category,
+        content: insight.content,
+        updated_at: new Date().toISOString(),
+      });
+
+    if (insightError) {
+      console.error('Error creating sample insight:', insightError);
+      // Continue creating other insights even if one fails
+    }
+  }
+
+  return { success: true, person };
+}
+

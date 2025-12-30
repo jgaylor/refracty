@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Insight, InsightCategory } from '@/lib/supabase/insights';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 interface InsightSectionProps {
   category: InsightCategory;
@@ -25,6 +26,7 @@ export function InsightSection({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingContent, setEditingContent] = useState('');
   const [loading, setLoading] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string } | null>(null);
 
   const handleAdd = async () => {
     if (!newContent.trim()) return;
@@ -67,12 +69,17 @@ export function InsightSection({
     setEditingContent('');
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this insight?')) return;
+  const handleDeleteClick = (id: string) => {
+    setDeleteConfirm({ id });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm) return;
 
     setLoading(true);
     try {
-      await onDelete(id);
+      await onDelete(deleteConfirm.id);
+      setDeleteConfirm(null);
     } catch (error) {
       console.error('Error deleting insight:', error);
     } finally {
@@ -90,7 +97,16 @@ export function InsightSection({
           <button
             onClick={() => setIsAdding(true)}
             disabled={loading}
-            className="text-primary hover:text-primary-hover transition-colors disabled:opacity-50"
+            className="p-1 rounded-md transition-colors disabled:opacity-50"
+            style={{ 
+              color: 'var(--text-primary)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
             aria-label="Add insight"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -145,20 +161,15 @@ export function InsightSection({
               </form>
             ) : (
               <>
-                <span className="flex-1">{insight.content}</span>
+                <span 
+                  className="flex-1 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => handleEdit(insight.id, insight.content)}
+                >
+                  {insight.content}
+                </span>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
-                    onClick={() => handleEdit(insight.id, insight.content)}
-                    disabled={loading}
-                    className="text-neutral-500 hover:text-neutral-700 p-1"
-                    aria-label="Edit insight"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => handleDelete(insight.id)}
+                    onClick={() => handleDeleteClick(insight.id)}
                     disabled={loading}
                     className="text-neutral-500 hover:text-red-600 p-1"
                     aria-label="Delete insight"
@@ -217,11 +228,26 @@ export function InsightSection({
         )}
 
         {insights.length === 0 && !isAdding && (
-          <p className="text-sm italic" style={{ color: 'var(--text-tertiary)' }}>
+          <p 
+            className="text-sm italic cursor-pointer hover:opacity-80 transition-opacity" 
+            style={{ color: 'var(--text-tertiary)' }}
+            onClick={() => setIsAdding(true)}
+          >
             No insights yet
           </p>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={!!deleteConfirm}
+        title="Delete Insight"
+        message="Are you sure you want to delete this insight? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   );
 }

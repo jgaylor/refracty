@@ -3,13 +3,15 @@
 import { useState } from 'react';
 import { CreatePersonInput } from '@/lib/supabase/people';
 import { useRouter } from 'next/navigation';
+import { showSuccessToast, showErrorToast } from '@/lib/toast';
 
 interface AddPersonModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onPersonAdded?: (personId: string) => void;
 }
 
-export function AddPersonModal({ isOpen, onClose }: AddPersonModalProps) {
+export function AddPersonModal({ isOpen, onClose, onPersonAdded }: AddPersonModalProps) {
   const [name, setName] = useState('');
   const [vibeSummary, setVibeSummary] = useState('');
   const [firstNote, setFirstNote] = useState('');
@@ -41,14 +43,33 @@ export function AddPersonModal({ isOpen, onClose }: AddPersonModalProps) {
     const result = await response.json();
 
     if (response.ok && result.success) {
+      const personId = result.person?.id;
+      
       // Reset form
       setName('');
       setVibeSummary('');
       setFirstNote('');
       onClose();
-      router.refresh();
+      
+      // Call onPersonAdded callback if provided
+      if (personId && onPersonAdded) {
+        onPersonAdded(personId);
+      } else {
+        // Show success toast with link to person page (only if not using callback)
+        if (personId) {
+          showSuccessToast('Person added', {
+            href: `/people/${personId}`,
+            text: 'View person',
+          });
+        } else {
+          showSuccessToast('Person added');
+        }
+        router.refresh();
+      }
     } else {
-      setError(result.error || 'Failed to create person');
+      const errorMessage = result.error || 'Failed to create person';
+      setError(errorMessage);
+      showErrorToast(errorMessage);
       setLoading(false);
     }
   };

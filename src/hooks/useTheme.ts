@@ -15,7 +15,7 @@ function getEffectiveTheme(appearance: AppearancePreference): EffectiveTheme {
   if (appearance === 'dark') return 'dark';
   
   // appearance === 'system'
-  if (typeof window === 'undefined') return 'light';
+  if (typeof window === 'undefined') return 'dark';
   return window.matchMedia('(prefers-color-scheme: dark)').matches
     ? 'dark'
     : 'light';
@@ -36,12 +36,12 @@ function applyTheme(theme: EffectiveTheme) {
  * Get appearance preference from localStorage
  */
 function getStoredAppearance(): AppearancePreference {
-  if (typeof window === 'undefined') return 'system';
+  if (typeof window === 'undefined') return 'dark';
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored === 'light' || stored === 'dark' || stored === 'system') {
     return stored;
   }
-  return 'system';
+  return 'dark';
 }
 
 /**

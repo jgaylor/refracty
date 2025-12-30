@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { PersonSelectionModal } from './people/PersonSelectionModal';
+import { AddPersonModal } from './people/AddPersonModal';
 import { PersonWithNote } from '@/lib/supabase/people';
+import { showSuccessToast, showErrorToast } from '@/lib/toast';
 
 const MAX_LENGTH = 144;
 
@@ -13,14 +15,16 @@ export function InsightCapture() {
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPersonModal, setShowPersonModal] = useState(false);
+  const [showAddPersonModal, setShowAddPersonModal] = useState(false);
   const [people, setPeople] = useState<PersonWithNote[]>([]);
+  const [pendingNoteContent, setPendingNoteContent] = useState<string | null>(null);
 
   // Extract person ID from pathname if on person detail page
   const personIdMatch = pathname.match(/^\/people\/([^/]+)$/);
   const currentPersonId = personIdMatch ? personIdMatch[1] : null;
 
-  // Determine if we should show the component (exclude /profile)
-  const shouldShow = pathname !== '/profile';
+  // Determine if we should show the component (exclude /settings and /style-guide)
+  const shouldShow = pathname !== '/settings' && pathname !== '/style-guide';
 
   // Fetch people list when modal opens
   useEffect(() => {
@@ -85,13 +89,21 @@ export function InsightCapture() {
 
       if (response.ok && result.success) {
         setContent('');
+        
+        // Show success toast with link to person page
+        showSuccessToast('Note captured', {
+          href: `/people/${personId}`,
+          text: 'View person',
+        });
+        
         router.refresh();
       } else {
         throw new Error(result.error || 'Failed to create note');
       }
     } catch (error) {
       console.error('Error creating note:', error);
-      // TODO: Show error message to user
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create note';
+      showErrorToast(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -100,6 +112,32 @@ export function InsightCapture() {
   const handlePersonSelect = async (personId: string) => {
     setShowPersonModal(false);
     await submitNote(personId, content);
+  };
+
+  const handleAddPersonClick = () => {
+    // Store the note content so we can submit it after person is created
+    setPendingNoteContent(content);
+    setShowPersonModal(false);
+    setShowAddPersonModal(true);
+  };
+
+  const handlePersonAdded = async (personId: string) => {
+    // Close both modals
+    setShowAddPersonModal(false);
+    setShowPersonModal(false);
+    
+    // Refresh people list
+    const response = await fetch('/api/people');
+    const data = await response.json();
+    if (data.people) {
+      setPeople(data.people);
+    }
+    
+    // Auto-select the newly created person and submit the note
+    if (pendingNoteContent) {
+      await submitNote(personId, pendingNoteContent);
+      setPendingNoteContent(null);
+    }
   };
 
   if (!shouldShow) return null;
@@ -112,7 +150,7 @@ export function InsightCapture() {
     <>
       <div className="fixed bottom-0 left-52 right-0 z-40">
         <div className="pl-4 pr-2 mb-6">
-          <div className="px-4">
+        <div className="px-4">
             <div className="max-w-3xl mx-auto border-t py-4 rounded-lg shadow-lg" style={{ background: 'var(--bg-gradient)', borderColor: 'var(--border-color)' }}>
             <div className="px-4">
               <form 
@@ -159,9 +197,9 @@ export function InsightCapture() {
                 One idea per note keeps things clearer later.
               </p>
             </div>
+            </div>
           </div>
         </div>
-      </div>
       </div>
 
       {/* Person Selection Modal */}
@@ -170,6 +208,21 @@ export function InsightCapture() {
         onClose={() => setShowPersonModal(false)}
         onSelect={handlePersonSelect}
         people={people}
+        onAddPerson={handleAddPersonClick}
+      />
+
+      {/* Add Person Modal */}
+      <AddPersonModal
+        isOpen={showAddPersonModal}
+        onClose={() => {
+          setShowAddPersonModal(false);
+          setPendingNoteContent(null);
+          // Reopen person selection modal if we have content
+          if (content.trim()) {
+            setShowPersonModal(true);
+          }
+        }}
+        onPersonAdded={handlePersonAdded}
       />
     </>
   );

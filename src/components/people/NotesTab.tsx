@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Note } from '@/lib/supabase/people';
 import { InsightCategory } from '@/lib/supabase/insights';
+import { showSuccessToast, showErrorToast } from '@/lib/toast';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 interface NotesTabProps {
   personId: string;
@@ -33,6 +35,7 @@ export function NotesTab({ personId, initialNotes, onNotesChange }: NotesTabProp
   const [loading, setLoading] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [moveToMenuId, setMoveToMenuId] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const router = useRouter();
 
   const formatDate = (dateString: string) => {
@@ -104,22 +107,33 @@ export function NotesTab({ personId, initialNotes, onNotesChange }: NotesTabProp
           onNotesChange?.(updated.length);
           return updated;
         });
+        showSuccessToast('Note moved to insight', {
+          href: `/people/${personId}`,
+          text: 'View person',
+        });
         router.refresh();
       } else {
         throw new Error(result.error || 'Failed to move note to insight');
       }
     } catch (error) {
       console.error('Error moving note to insight:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to move note to insight';
+      showErrorToast(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeleteNote = async (noteId: string) => {
-    if (!confirm('Are you sure you want to delete this note?')) return;
-
-    setLoading(true);
+  const handleDeleteNoteClick = (noteId: string) => {
     setOpenMenuId(null);
+    setDeleteConfirm(noteId);
+  };
+
+  const handleDeleteNote = async () => {
+    if (!deleteConfirm) return;
+
+    const noteId = deleteConfirm;
+    setLoading(true);
     try {
       const response = await fetch(`/api/people/${personId}/notes/${noteId}`, {
         method: 'DELETE',
@@ -134,12 +148,16 @@ export function NotesTab({ personId, initialNotes, onNotesChange }: NotesTabProp
           onNotesChange?.(updated.length);
           return updated;
         });
+        showSuccessToast('Note deleted');
+        setDeleteConfirm(null);
         router.refresh();
       } else {
         throw new Error(result.error || 'Failed to delete note');
       }
     } catch (error) {
       console.error('Error deleting note:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete note';
+      showErrorToast(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -186,7 +204,14 @@ export function NotesTab({ personId, initialNotes, onNotesChange }: NotesTabProp
       ) : (
         <div className="space-y-4">
           {notes.map((note) => (
-            <div key={note.id} className="card p-4 relative group">
+            <div 
+              key={note.id} 
+              className="p-4 rounded-lg border relative group"
+              style={{
+                backgroundColor: 'var(--bg-primary)',
+                borderColor: 'var(--border-color)',
+              }}
+            >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <p className="mb-2" style={{ color: 'var(--text-primary)' }}>
@@ -305,7 +330,7 @@ export function NotesTab({ personId, initialNotes, onNotesChange }: NotesTabProp
                             style={{ borderColor: 'var(--border-color)', borderTopWidth: '1px' }}
                           />
                           <button
-                            onClick={() => handleDeleteNote(note.id)}
+                            onClick={() => handleDeleteNoteClick(note.id)}
                             disabled={loading}
                             className="w-full text-left px-4 py-2 text-sm hover:bg-opacity-50 transition-colors disabled:opacity-50 text-red-600"
                             onMouseEnter={(e) => {
@@ -327,6 +352,17 @@ export function NotesTab({ personId, initialNotes, onNotesChange }: NotesTabProp
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={!!deleteConfirm}
+        title="Delete Note"
+        message="Are you sure you want to delete this note? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={handleDeleteNote}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { getUserProfile } from '@/lib/supabase/profile';
 import { redirect } from 'next/navigation';
 import { ProfileContent } from '@/components/ProfileContent';
 
-export default async function ProfilePage() {
+export default async function SettingsPage() {
   const user = await getUser();
 
   if (!user) {
@@ -15,7 +15,7 @@ export default async function ProfilePage() {
   return (
     <div className="px-4">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Profile</h1>
+        <h1 className="text-3xl font-bold mb-8">Settings</h1>
         <ProfileContent user={user} appearance={profile?.appearance} />
       </div>
     </div>

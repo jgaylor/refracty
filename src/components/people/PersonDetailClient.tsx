@@ -30,21 +30,41 @@ export function PersonDetailClient({
         <div className="flex gap-6">
           <button
             onClick={() => setActiveTab('insights')}
-            className={`pb-3 px-1 font-medium text-sm transition-colors border-b-2 ${
-              activeTab === 'insights'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-neutral-500 hover:text-neutral-700'
-            }`}
+            className="pb-3 px-1 font-medium text-sm transition-colors border-b-2"
+            style={{
+              borderColor: activeTab === 'insights' ? 'var(--text-primary)' : 'transparent',
+              color: activeTab === 'insights' ? 'var(--text-primary)' : 'var(--text-secondary)',
+            }}
+            onMouseEnter={(e) => {
+              if (activeTab !== 'insights') {
+                e.currentTarget.style.color = 'var(--text-primary)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (activeTab !== 'insights') {
+                e.currentTarget.style.color = 'var(--text-secondary)';
+              }
+            }}
           >
             Insights
           </button>
           <button
             onClick={() => setActiveTab('notes')}
-            className={`pb-3 px-1 font-medium text-sm transition-colors border-b-2 ${
-              activeTab === 'notes'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-neutral-500 hover:text-neutral-700'
-            }`}
+            className="pb-3 px-1 font-medium text-sm transition-colors border-b-2"
+            style={{
+              borderColor: activeTab === 'notes' ? 'var(--text-primary)' : 'transparent',
+              color: activeTab === 'notes' ? 'var(--text-primary)' : 'var(--text-secondary)',
+            }}
+            onMouseEnter={(e) => {
+              if (activeTab !== 'notes') {
+                e.currentTarget.style.color = 'var(--text-primary)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (activeTab !== 'notes') {
+                e.currentTarget.style.color = 'var(--text-secondary)';
+              }
+            }}
           >
             My Notes ({notesCount})
           </button>

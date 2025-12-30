@@ -1,8 +1,17 @@
-export default function InsightsPage() {
+import { getAllNotesAndInsights } from '@/lib/supabase/insights';
+import { InsightsList } from '@/components/insights/InsightsList';
+
+export default async function InsightsPage() {
+  const { items, hasMore } = await getAllNotesAndInsights(20, 0);
+
   return (
     <div className="px-4">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Insights</h1>
+        <h1 className="text-3xl font-bold mb-2">Insights</h1>
+        <p className="text-sm mb-8" style={{ color: 'var(--text-secondary)' }}>
+          All your notes and observations in one place
+        </p>
+        <InsightsList initialItems={items} initialHasMore={hasMore} />
       </div>
     </div>
   );
