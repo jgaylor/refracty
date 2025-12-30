@@ -4,9 +4,10 @@ Minimal full-stack starter using Next.js (App Router, TypeScript), Tailwind CSS,
 
 ## What it does
 
-- Fetches a greeting from Supabase
-- Renders it dynamically in Next.js
-- Auto-deploys via GitHub → Vercel
+- User authentication and profiles
+- People management with notes and observations
+- Theme/appearance settings
+- Built with Next.js App Router, TypeScript, Tailwind CSS, and Supabase
 
 ## Local setup
 
@@ -22,9 +23,12 @@ Minimal full-stack starter using Next.js (App Router, TypeScript), Tailwind CSS,
 
 ## Supabase
 
-- Table: `greetings`
-- Columns: `id`, `message`, `created_at`
-- RLS enabled with public SELECT policy
+Tables:
+- `profiles` - User profile and appearance settings
+- `people` - People the user works with
+- `notes` - Notes and observations about people
+
+All tables use Row Level Security (RLS) to ensure users can only access their own data.
 
 ## Deployment
 
