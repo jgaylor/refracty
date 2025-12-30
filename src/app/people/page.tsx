@@ -23,10 +23,18 @@ export default async function PeoplePage() {
       if (result.success && result.person) {
         // Refresh people list to include the sample person
         people = await getPeople();
+      } else {
+        console.error('Failed to create sample person:', result.error || 'Unknown error');
       }
     } catch (error) {
       // Don't block page load if sample creation fails
-      console.error('Error creating sample person:', error);
+      console.error('Error creating sample person (exception):', error);
+      if (error instanceof Error) {
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack,
+        });
+      }
     }
   }
 

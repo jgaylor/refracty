@@ -25,7 +25,7 @@ export function SignupForm() {
     }
 
     const supabase = createClient();
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -37,7 +37,25 @@ export function SignupForm() {
       setError(signUpError.message);
       setLoading(false);
     } else {
-      router.push('/');
+      // If session is null, email confirmation is required
+      if (!data.session) {
+        router.push('/confirm-email');
+      } else {
+        // User is immediately authenticated (email confirmation disabled)
+        // Create sample person before redirecting
+        try {
+          const response = await fetch('/api/people/sample', {
+            method: 'POST',
+          });
+          if (!response.ok) {
+            console.error('Failed to create sample person:', await response.text());
+          }
+        } catch (error) {
+          console.error('Error creating sample person:', error);
+          // Don't block signup flow if sample creation fails
+        }
+        router.push('/people');
+      }
       router.refresh();
     }
   };
