@@ -27,9 +27,6 @@ function getEffectiveTheme(appearance: AppearancePreference): EffectiveTheme {
 function applyTheme(theme: EffectiveTheme) {
   if (typeof document === 'undefined') return;
   document.documentElement.setAttribute('data-theme', theme);
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useTheme.ts:27',message:'applyTheme executed',data:{theme,actualAttribute:document.documentElement.getAttribute('data-theme')},timestamp:Date.now(),sessionId:'debug-session',runId:'run3',hypothesisId:'M'})}).catch(()=>{});
-  // #endregion
 }
 
 /**
@@ -56,9 +53,6 @@ export function useTheme() {
   const [appearance, setAppearance] = useState<AppearancePreference>(() => {
     // Initialize from localStorage on mount
     const stored = getStoredAppearance();
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useTheme.ts:52',message:'useTheme init appearance',data:{storedAppearance:stored},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-    // #endregion
     return stored;
   });
 
@@ -66,17 +60,11 @@ export function useTheme() {
     // Compute initial effective theme
     const stored = getStoredAppearance();
     const theme = getEffectiveTheme(stored);
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useTheme.ts:60',message:'useTheme init effectiveTheme',data:{storedAppearance:stored,effectiveTheme:theme},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-    // #endregion
     return theme;
   });
 
   // Apply theme when effectiveTheme changes
   useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useTheme.ts:65',message:'Applying theme',data:{effectiveTheme},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-    // #endregion
     applyTheme(effectiveTheme);
   }, [effectiveTheme]);
 
@@ -108,23 +96,14 @@ export function useTheme() {
   // Update effective theme when appearance changes
   useEffect(() => {
     const newTheme = getEffectiveTheme(appearance);
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useTheme.ts:106',message:'Appearance changed, updating effectiveTheme',data:{appearance,newTheme,currentEffectiveTheme:effectiveTheme},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'L'})}).catch(()=>{});
-    // #endregion
     setEffectiveTheme(newTheme);
   }, [appearance]);
 
   const setAppearancePreference = useCallback((newAppearance: AppearancePreference) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useTheme.ts:114',message:'setAppearancePreference called',data:{newAppearance},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'L'})}).catch(()=>{});
-    // #endregion
     setAppearance(newAppearance);
     saveAppearance(newAppearance);
     // Immediately compute and apply the new effective theme
     const newTheme = getEffectiveTheme(newAppearance);
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useTheme.ts:120',message:'Immediately applying theme from setAppearancePreference',data:{newAppearance,newTheme},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'L'})}).catch(()=>{});
-    // #endregion
     setEffectiveTheme(newTheme);
     applyTheme(newTheme);
   }, []);

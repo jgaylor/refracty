@@ -32,36 +32,17 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'layout.tsx:28',message:'RootLayout render start',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
   const user = await getUser();
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'layout.tsx:37',message:'After getUser',data:{hasUser:!!user,userId:user?.id,userEmail:user?.email,isLoggedIn:!!user},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
   const isLoggedIn = !!user;
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'layout.tsx:41',message:'isLoggedIn calculated',data:{isLoggedIn,willRenderSidebar:isLoggedIn,willRenderLoggedOut:!isLoggedIn},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-  // #endregion
   let profile = null;
   try {
     profile = isLoggedIn ? await getUserProfile() : null;
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'layout.tsx:36',message:'After getUserProfile',data:{hasProfile:!!profile,appearance:profile?.appearance},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
   } catch (error) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'layout.tsx:40',message:'Error in getUserProfile',data:{errorMessage:error instanceof Error ? error.message : String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
     // Gracefully handle error - app should still work without profile
     profile = null;
   }
 
   const themeScript = getThemeScript();
-  
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'layout.tsx:55',message:'Rendering layout with theme script',data:{hasProfile:!!profile,appearance:profile?.appearance,scriptLength:themeScript.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'J'})}).catch(()=>{});
-  // #endregion
   
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
@@ -72,9 +53,6 @@ export default async function RootLayout({
           <Header />
           {isLoggedIn ? (
             <div className="flex flex-1 min-h-0">
-              {/* #region agent log */}
-              {(() => { fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'layout.tsx:69',message:'Rendering Sidebar with initialUser',data:{hasInitialUser:!!user,initialUserId:user?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{}); return null; })()}
-              {/* #endregion */}
               <Sidebar initialUser={user} />
               <main className="flex-1 min-w-0 pt-8 pb-32 overflow-auto [scrollbar-gutter:stable]">
                 {children}

@@ -17,26 +17,17 @@ export function LoginForm() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginForm.tsx:16',message:'Login attempt started',data:{email},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
 
     const supabase = createClient();
     const { data, error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginForm.tsx:25',message:'Login result',data:{hasError:!!signInError,errorMessage:signInError?.message,hasSession:!!data?.session,hasUser:!!data?.user,userId:data?.user?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-    // #endregion
 
     if (signInError) {
       setError(signInError.message);
       setLoading(false);
     } else {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'LoginForm.tsx:32',message:'Login success, redirecting',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
       router.push('/');
       router.refresh();
     }

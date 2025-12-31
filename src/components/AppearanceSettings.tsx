@@ -17,17 +17,11 @@ export function AppearanceSettings({ initialAppearance }: { initialAppearance?: 
   // We don't want to override user's selection while they're interacting
   useEffect(() => {
     if (initialAppearance && initialAppearance !== currentAppearance) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AppearanceSettings.tsx:19',message:'Syncing currentAppearance from initialAppearance',data:{initialAppearance,currentAppearance},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'K'})}).catch(()=>{});
-      // #endregion
       setCurrentAppearance(initialAppearance);
     }
   }, [initialAppearance]); // Only sync when initialAppearance changes (from server)
 
   const handleChange = async (newAppearance: AppearancePreference) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AppearanceSettings.tsx:27',message:'handleChange called',data:{newAppearance,previousAppearance:currentAppearance},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'K'})}).catch(()=>{});
-    // #endregion
     const previousAppearance = currentAppearance;
     
     // Optimistic update - update local state first
@@ -40,21 +34,12 @@ export function AppearanceSettings({ initialAppearance }: { initialAppearance?: 
 
     try {
       const supabase = createClient();
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AppearanceSettings.tsx:35',message:'Before getUser',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
-      // #endregion
       const { data: { user } } = await supabase.auth.getUser();
       
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AppearanceSettings.tsx:38',message:'After getUser',data:{hasUser:!!user,userId:user?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
-      // #endregion
       if (!user) {
         throw new Error('User not authenticated');
       }
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AppearanceSettings.tsx:44',message:'Before profiles upsert',data:{userId:user.id,appearance:newAppearance},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
-      // #endregion
       const { error: updateError } = await supabase
         .from('profiles')
         .upsert(
@@ -68,20 +53,10 @@ export function AppearanceSettings({ initialAppearance }: { initialAppearance?: 
           }
         );
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AppearanceSettings.tsx:57',message:'After profiles upsert',data:{hasError:!!updateError,errorCode:updateError?.code,errorMessage:updateError?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
-      // #endregion
-
       if (updateError) {
         throw updateError;
       }
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AppearanceSettings.tsx:61',message:'Appearance update success',data:{appearance:newAppearance,currentAppearanceState:currentAppearance},timestamp:Date.now(),sessionId:'debug-session',runId:'run2',hypothesisId:'K'})}).catch(()=>{});
-      // #endregion
     } catch (err) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'AppearanceSettings.tsx:64',message:'Appearance update error',data:{errorMessage:err instanceof Error ? err.message : String(err),revertingTo:previousAppearance},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
-      // #endregion
       // Revert on error
       setCurrentAppearance(previousAppearance);
       setAppearance(previousAppearance);

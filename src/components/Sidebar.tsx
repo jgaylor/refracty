@@ -32,34 +32,19 @@ interface SidebarProps {
 }
 
 export function Sidebar({ initialUser = null }: SidebarProps = {}) {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Sidebar.tsx:34',message:'Sidebar render start',data:{hasInitialUser:!!initialUser,initialUserId:initialUser?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
   const [user, setUser] = useState<User | null>(initialUser);
   const [loading, setLoading] = useState(!initialUser);
   const pathname = usePathname();
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Sidebar.tsx:38',message:'Sidebar state initialized',data:{userState:!!user,userId:user?.id,loading},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
 
   useEffect(() => {
     const supabase = createClient();
 
     // If we have an initial user, we can skip the initial check
     if (initialUser) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Sidebar.tsx:43',message:'Sidebar: Using initialUser, skipping client check',data:{initialUserId:initialUser?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
       setLoading(false);
     } else {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Sidebar.tsx:47',message:'Sidebar: No initialUser, checking client auth',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
       // Get initial session
       supabase.auth.getUser().then(({ data: { user } }) => {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Sidebar.tsx:50',message:'Sidebar: Client auth check result',data:{hasUser:!!user,userId:user?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
         setUser(user);
         setLoading(false);
       });
@@ -69,9 +54,6 @@ export function Sidebar({ initialUser = null }: SidebarProps = {}) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Sidebar.tsx:58',message:'Sidebar: Auth state changed',data:{event:_event,hasSession:!!session,hasUser:!!session?.user,userId:session?.user?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
       setUser(session?.user ?? null);
       setLoading(false);
     });
@@ -81,22 +63,13 @@ export function Sidebar({ initialUser = null }: SidebarProps = {}) {
 
   // Show skeleton while loading
   if (loading) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Sidebar.tsx:65',message:'Sidebar: Rendering skeleton (loading)',data:{},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
     return <SidebarSkeleton />;
   }
 
   // Don't render if not logged in
   if (!user) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Sidebar.tsx:70',message:'Sidebar: Returning null (no user)',data:{hasInitialUser:!!initialUser},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
     return null;
   }
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/e167765d-2db9-4a7f-8487-28e2f87e5d24',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Sidebar.tsx:73',message:'Sidebar: Rendering sidebar content',data:{userId:user?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
 
   const isActive = (path: string) => pathname === path;
 
