@@ -47,13 +47,32 @@ export default async function RootLayout({
     profile = null;
   }
 
+  const themeScript = `
+    (function() {
+      try {
+        var appearance = localStorage.getItem('appearance-preference') || 'dark';
+        var theme = 'dark';
+        if (appearance === 'light') {
+          theme = 'light';
+        } else if (appearance === 'dark') {
+          theme = 'dark';
+        } else {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  `;
+
   return (
     <html lang="en" className="h-full" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} h-full flex flex-col`}>
         <Script
           id="theme-init"
           strategy="beforeInteractive"
-          src="/theme-init.js"
+          dangerouslySetInnerHTML={{ __html: themeScript }}
         />
         <ThemeProvider initialAppearance={profile?.appearance}>
           <ToasterWrapper />
