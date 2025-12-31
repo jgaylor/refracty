@@ -11,7 +11,7 @@ export default async function SignupPage() {
   return (
     <div className="flex justify-center px-4">
       <div className="w-full max-w-xs">
-        <h1 className="text-3xl font-bold text-center mb-8">Sign Up</h1>
+        <h1 className="text-3xl font-bold text-center mb-8" style={{ color: 'var(--text-primary)' }}>Sign Up</h1>
         <SignupForm />
       </div>
     </div>

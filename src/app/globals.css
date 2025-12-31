@@ -211,13 +211,25 @@
 
   /* Links */
   .link {
-    @apply text-primary hover:text-primary-hover transition-colors;
+    color: var(--link-color);
+    transition: color 0.2s;
+  }
+  .link:hover {
+    opacity: 0.8;
   }
 
   .link-secondary {
     color: var(--text-secondary);
   }
   .link-secondary:hover {
+    color: var(--text-primary);
+  }
+
+  /* Icon button with theme-aware hover */
+  .icon-button {
+    color: var(--text-secondary);
+  }
+  .icon-button:hover {
     color: var(--text-primary);
   }
 

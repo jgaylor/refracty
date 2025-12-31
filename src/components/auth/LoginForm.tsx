@@ -75,7 +75,7 @@ export function LoginForm() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-700 focus:outline-none"
+              className="absolute right-3 top-1/2 -translate-y-1/2 focus:outline-none transition-colors icon-button"
               aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
               {showPassword ? (
@@ -107,7 +107,7 @@ export function LoginForm() {
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-neutral-600">
+      <p className="mt-6 text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
         Don&apos;t have an account?{' '}
         <Link href="/signup" className="link font-medium">
           Sign up
