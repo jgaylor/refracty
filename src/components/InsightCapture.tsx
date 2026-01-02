@@ -148,8 +148,8 @@ export function InsightCapture() {
 
   return (
     <>
-      <div className="fixed bottom-0 left-52 right-0 z-40">
-        <div className="pl-4 pr-2 mb-6">
+      <div className="fixed bottom-0 left-0 md:left-52 right-0 z-40">
+        <div className="pl-0 pr-2 md:pl-4 md:pr-2 mb-6">
         <div className="px-4">
             <div className="max-w-3xl mx-auto border-t py-4 rounded-lg shadow-lg" style={{ background: 'var(--bg-gradient)', borderColor: 'var(--border-color)' }}>
             <div className="px-4">
