@@ -89,7 +89,7 @@ export default async function RootLayout({
                   <SidebarDrawer initialUser={user} />
                   <div className="flex flex-1 min-h-0">
                     <Sidebar initialUser={user} />
-                    <main className="flex-1 min-w-0 pt-20 pb-32 overflow-auto [scrollbar-gutter:stable] md:pt-8">
+                    <main className="flex-1 min-w-0 pt-20 pb-32 overflow-auto [scrollbar-gutter:stable] md:pt-8 px-4 md:px-6">
                       {children}
                       <InsightCapture />
                     </main>

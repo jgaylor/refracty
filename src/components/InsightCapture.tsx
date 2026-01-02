@@ -140,18 +140,28 @@ export function InsightCapture() {
     }
   };
 
-  if (!shouldShow) return null;
+  // Use state for placeholder to ensure consistent server/client render
+  const [placeholder, setPlaceholder] = useState('Add a note about someone...');
 
-  const placeholder = currentPerson
-    ? `Capture an insight about ${currentPerson.name}...`
-    : 'Capture an insight about someone...';
+  // Update placeholder after mount to avoid hydration mismatch
+  useEffect(() => {
+    if (currentPerson) {
+      setPlaceholder(`Add a note about ${currentPerson.name}...`);
+    } else {
+      setPlaceholder('Add a note about someone...');
+    }
+  }, [currentPerson]);
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 md:left-52 right-0 z-40">
-        <div className="pl-0 pr-2 md:pl-4 md:pr-2 mb-6">
-        <div className="px-4">
-            <div className="max-w-3xl mx-auto border-t py-4 rounded-lg shadow-lg" style={{ background: 'var(--bg-gradient)', borderColor: 'var(--border-color)' }}>
+      <div 
+        className={`fixed bottom-0 left-0 md:left-56 right-0 z-40 px-0 md:pr-10 md:px-6 [scrollbar-gutter:stable] ${shouldShow ? '' : 'hidden'}`}
+        suppressHydrationWarning
+      >
+        <div className="max-w-full md:max-w-2xl mx-auto">
+          <div 
+            className="py-4 md:pb-8 shadow-lg insight-capture-bg insight-capture-card"
+          >
             <div className="px-4">
               <form 
                 onSubmit={(e) => {
@@ -165,6 +175,7 @@ export function InsightCapture() {
                     type="text"
                     placeholder={placeholder}
                     value={content}
+                    suppressHydrationWarning
                     onChange={(e) => {
                       const newValue = e.target.value;
                       if (newValue.length <= MAX_LENGTH) {
@@ -196,7 +207,6 @@ export function InsightCapture() {
               <p className="text-xs mt-2 text-center" style={{ color: 'var(--text-tertiary)' }}>
                 One idea per note keeps things clearer later.
               </p>
-            </div>
             </div>
           </div>
         </div>

@@ -18,7 +18,11 @@ export function PageHeader({ breadcrumbs, actions }: PageHeaderProps) {
   return (
     <div className="flex items-center justify-between mb-6">
       <Breadcrumb items={breadcrumbs} />
-      {actions && actions.length > 0 && <PageActions actions={actions} />}
+      {actions && actions.length > 0 && (
+        <div className="hidden md:block">
+          <PageActions actions={actions} />
+        </div>
+      )}
     </div>
   );
 }

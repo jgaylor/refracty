@@ -101,7 +101,7 @@ export function PersonHeader({ person }: PersonHeaderProps) {
               style={{ color: 'var(--text-secondary)' }}
               onClick={() => setIsEditing(true)}
             >
-              {person.vibe_summary || 'Click to add a summary...'}
+              {person.vibe_summary || 'Add a summary...'}
             </p>
           )}
         </div>

@@ -35,7 +35,7 @@ export default async function PeoplePage() {
   }
 
   return (
-    <div className="px-4">
+    <div>
       <div className="max-w-2xl mx-auto">
         <PeoplePageClient initialPeople={people} />
       </div>

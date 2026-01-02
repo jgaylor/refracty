@@ -105,7 +105,7 @@ export function PeoplePageClient({ initialPeople }: PeoplePageClientProps) {
 
           <button
             onClick={() => setIsModalOpen(true)}
-            className="btn-primary px-4 py-2 rounded-md whitespace-nowrap"
+            className="btn-primary px-4 py-2 rounded-md whitespace-nowrap hidden md:block"
           >
             Add Person
           </button>

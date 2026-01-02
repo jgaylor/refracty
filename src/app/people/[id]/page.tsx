@@ -31,7 +31,7 @@ export default async function PersonPage({ params }: PersonPageProps) {
   ]);
 
   return (
-    <div className="px-4">
+    <div>
       <div className="max-w-2xl mx-auto">
         <PersonPageHeader personId={person.id} personName={person.name} />
         <PersonDetailClient

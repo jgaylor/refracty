@@ -71,7 +71,7 @@ export function PersonDetailClient({
               }
             }}
           >
-            My Notes ({notesCount})
+            Unsorted notes ({notesCount})
           </button>
         </div>
       </div>

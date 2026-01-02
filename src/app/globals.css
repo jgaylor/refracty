@@ -16,6 +16,7 @@
     --border-color-light: #f5f5f5;
     --shadow-color: rgba(0, 0, 0, 0.1);
     --link-color: #3b82f6;
+    --scrollbar-width: 16px;
   }
 
   /* CSS Variables for Theming - Dark Mode */
@@ -115,8 +116,8 @@
   /* Global scrollbar styling */
   /* Webkit browsers (Chrome, Safari, Edge) */
   ::-webkit-scrollbar {
-    width: 12px;
-    height: 12px;
+    width: 16px;
+    height: 16px;
   }
 
   ::-webkit-scrollbar-track {
@@ -135,7 +136,7 @@
 
   /* Firefox */
   * {
-    scrollbar-width: thin;
+    scrollbar-width: 16px;
     scrollbar-color: var(--border-color) var(--bg-secondary);
   }
 }
@@ -269,4 +270,25 @@
     background-size: 1000px 100%;
     animation: shimmer 2s infinite;
   }
+
+  /* InsightCapture responsive background */
+  .insight-capture-bg {
+    background-color: var(--bg-primary);
+  }
+
+
+  /* InsightCapture card styling with Chrome fixes */
+  .insight-capture-card {
+    border-top: 1px solid var(--border-color);
+    border-left: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+    overflow: hidden;
+    transform: translateZ(0); /* Hardware acceleration for Chrome */
+    will-change: transform; /* Hint for browser optimization */
+    -webkit-backface-visibility: hidden; /* Chrome fix */
+    backface-visibility: hidden;
+  }
+
 }
