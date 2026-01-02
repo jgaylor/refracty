@@ -282,8 +282,8 @@
     border-top: 1px solid var(--border-color);
     border-left: 1px solid var(--border-color);
     border-right: 1px solid var(--border-color);
-    border-top-left-radius: 0.5rem;
-    border-top-right-radius: 0.5rem;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
     overflow: hidden;
     transform: translateZ(0); /* Hardware acceleration for Chrome */
     will-change: transform; /* Hint for browser optimization */
