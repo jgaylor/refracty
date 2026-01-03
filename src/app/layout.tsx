@@ -12,6 +12,7 @@ import { DrawerProvider } from "@/components/DrawerContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { InsightCapture } from "@/components/InsightCapture";
 import { ToasterWrapper } from "@/components/ToasterWrapper";
+import { ViewportWrapper } from "@/components/ViewportWrapper";
 import { getUser } from "@/lib/supabase/auth";
 import { getUserProfile } from "@/lib/supabase/profile";
 
@@ -83,11 +84,20 @@ export default async function RootLayout({
             <MobileHeaderProvider>
               <ToasterWrapper />
               <Header />
-              <MobileHeader />
               {isLoggedIn ? (
                 <>
                   <SidebarDrawer initialUser={user} />
-                  <div className="flex flex-1 min-h-0">
+                  <ViewportWrapper>
+                    <MobileHeader />
+                    <div className="flex flex-1 min-h-0 h-full md:h-auto">
+                      <Sidebar initialUser={user} />
+                      <main className="flex-1 min-w-0 pt-20 pb-32 overflow-auto [scrollbar-gutter:stable] md:pt-8 px-4 md:px-6">
+                        {children}
+                        <InsightCapture />
+                      </main>
+                    </div>
+                  </ViewportWrapper>
+                  <div className="hidden md:flex flex-1 min-h-0">
                     <Sidebar initialUser={user} />
                     <main className="flex-1 min-w-0 pt-20 pb-32 overflow-auto [scrollbar-gutter:stable] md:pt-8 px-4 md:px-6">
                       {children}
@@ -97,6 +107,7 @@ export default async function RootLayout({
                 </>
               ) : (
                 <>
+                  <MobileHeader />
                   <div className="pt-20 pb-16 md:pt-32">
                     {children}
                   </div>
