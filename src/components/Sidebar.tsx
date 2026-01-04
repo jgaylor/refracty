@@ -65,6 +65,20 @@ export function Sidebar({ initialUser = null }: SidebarProps = {}) {
   const pathname = usePathname();
   const router = useRouter();
   
+  // Touch device detection for hover state handling
+  const isTouchDevice = useRef(false);
+  const isTouching = useRef(false);
+  
+  // Detect touch device on mount
+  useEffect(() => {
+    isTouchDevice.current = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  }, []);
+  
+  // Helper function to reset hover state (clear background)
+  const resetHoverState = (element: HTMLElement) => {
+    element.style.backgroundColor = 'transparent';
+  };
+  
   // People section state
   const [people, setPeople] = useState<PersonWithNote[]>([]);
   const [favorites, setFavorites] = useState<PersonWithNote[]>([]);
@@ -313,7 +327,7 @@ export function Sidebar({ initialUser = null }: SidebarProps = {}) {
     <div className="h-full flex flex-col">
       {/* Header with branding and user menu */}
       <div className="flex items-center justify-between py-8 px-4">
-        <Link href="/insights" className="flex items-center gap-3 px-3 hover:opacity-80 transition-opacity">
+        <Link href="/home" className="flex items-center gap-3 px-3 hover:opacity-80 transition-opacity">
           {/* Avatar placeholder with "R" - aligned with menu icons */}
           <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
             <span className="text-white font-medium text-sm">R</span>
@@ -397,34 +411,62 @@ export function Sidebar({ initialUser = null }: SidebarProps = {}) {
       </div>
 
       {/* Navigation items */}
-      <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+      <nav className="flex-1 overflow-y-auto p-4 space-y-3">
         {/* Home */}
         <Link
-          href="/insights"
-          className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-            isActive('/insights')
-              ? 'bg-primary text-white'
-              : 'sidebar-link'
-          }`}
+          href="/home"
+          className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-semibold sidebar-link transition-colors"
         >
           <HomeIcon className="w-5 h-5 flex-shrink-0" />
           <span>Home</span>
         </Link>
 
         {/* Favorites Section */}
-        <div className="mt-4">
+        <div className="mt-6">
           {/* Favorites Header */}
           <div className="group relative flex items-center gap-3 px-3 py-2 rounded-md transition-colors"
             onMouseEnter={(e) => {
+              // Don't apply hover styles on touch devices or during touch interactions
+              if (isTouchDevice.current || isTouching.current) {
+                return;
+              }
               e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
             }}
             onMouseLeave={(e) => {
+              // Don't handle mouse leave on touch devices
+              if (isTouchDevice.current) {
+                return;
+              }
               e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+            onTouchStart={(e) => {
+              isTouching.current = true;
+              // Clear any existing hover state immediately
+              resetHoverState(e.currentTarget);
+            }}
+            onTouchEnd={(e) => {
+              const element = e.currentTarget;
+              // Immediately clear any hover state that might have been applied
+              resetHoverState(element);
+              // Reset touching flag after a short delay to allow click to fire
+              setTimeout(() => {
+                isTouching.current = false;
+              }, 100);
+              // Also clear hover state after delays to catch any delayed hover states from iOS
+              setTimeout(() => {
+                resetHoverState(element);
+              }, 50);
+              setTimeout(() => {
+                resetHoverState(element);
+              }, 200);
+              setTimeout(() => {
+                resetHoverState(element);
+              }, 500);
             }}
           >
             <button
               onClick={() => setIsFavoritesExpanded(!isFavoritesExpanded)}
-              className="flex items-center gap-2 flex-1 text-sm font-medium"
+              className="flex items-center gap-2 flex-1 text-sm font-semibold"
               style={{ color: 'var(--text-primary)' }}
             >
               <svg
@@ -436,6 +478,9 @@ export function Sidebar({ initialUser = null }: SidebarProps = {}) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
               <span>Favorites</span>
+              <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                {favorites.length}
+              </span>
             </button>
           </div>
 
@@ -466,19 +511,51 @@ export function Sidebar({ initialUser = null }: SidebarProps = {}) {
         </div>
 
         {/* People Section */}
-        <div className="mt-4">
+        <div className="mt-6">
           {/* People Header */}
           <div className="group relative flex items-center gap-3 px-3 py-2 rounded-md transition-colors"
             onMouseEnter={(e) => {
+              // Don't apply hover styles on touch devices or during touch interactions
+              if (isTouchDevice.current || isTouching.current) {
+                return;
+              }
               e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
             }}
             onMouseLeave={(e) => {
+              // Don't handle mouse leave on touch devices
+              if (isTouchDevice.current) {
+                return;
+              }
               e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+            onTouchStart={(e) => {
+              isTouching.current = true;
+              // Clear any existing hover state immediately
+              resetHoverState(e.currentTarget);
+            }}
+            onTouchEnd={(e) => {
+              const element = e.currentTarget;
+              // Immediately clear any hover state that might have been applied
+              resetHoverState(element);
+              // Reset touching flag after a short delay to allow click to fire
+              setTimeout(() => {
+                isTouching.current = false;
+              }, 100);
+              // Also clear hover state after delays to catch any delayed hover states from iOS
+              setTimeout(() => {
+                resetHoverState(element);
+              }, 50);
+              setTimeout(() => {
+                resetHoverState(element);
+              }, 200);
+              setTimeout(() => {
+                resetHoverState(element);
+              }, 500);
             }}
           >
             <button
               onClick={() => setIsPeopleExpanded(!isPeopleExpanded)}
-              className="flex items-center gap-2 flex-1 text-sm font-medium"
+              className="flex items-center gap-2 flex-1 text-sm font-semibold"
               style={{ color: 'var(--text-primary)' }}
             >
               <svg
@@ -490,6 +567,9 @@ export function Sidebar({ initialUser = null }: SidebarProps = {}) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
               <span>People</span>
+              <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                {people.length}
+              </span>
             </button>
             <IconButton
               variant="group-hover"
@@ -575,6 +655,20 @@ export function SidebarContent({ initialUser = null }: SidebarProps = {}) {
   const userMenuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
+  
+  // Touch device detection for hover state handling
+  const isTouchDevice = useRef(false);
+  const isTouching = useRef(false);
+  
+  // Detect touch device on mount
+  useEffect(() => {
+    isTouchDevice.current = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  }, []);
+  
+  // Helper function to reset hover state (clear background)
+  const resetHoverState = (element: HTMLElement) => {
+    element.style.backgroundColor = 'transparent';
+  };
   
   // People section state
   const [people, setPeople] = useState<PersonWithNote[]>([]);
@@ -819,7 +913,7 @@ export function SidebarContent({ initialUser = null }: SidebarProps = {}) {
     <div className="h-full flex flex-col">
       {/* Header with branding and user menu */}
       <div className="flex items-center justify-between py-8 px-4">
-        <Link href="/insights" className="flex items-center gap-3 px-3 hover:opacity-80 transition-opacity">
+        <Link href="/home" className="flex items-center gap-3 px-3 hover:opacity-80 transition-opacity">
           <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
             <span className="text-white font-medium text-sm">R</span>
           </div>
@@ -902,34 +996,62 @@ export function SidebarContent({ initialUser = null }: SidebarProps = {}) {
       </div>
 
       {/* Navigation items */}
-      <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+      <nav className="flex-1 overflow-y-auto p-4 space-y-3">
         {/* Home */}
         <Link
-          href="/insights"
-          className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-            isActive('/insights')
-              ? 'bg-primary text-white'
-              : 'sidebar-link'
-          }`}
+          href="/home"
+          className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-semibold sidebar-link transition-colors"
         >
           <HomeIcon className="w-5 h-5 flex-shrink-0" />
           <span>Home</span>
         </Link>
 
         {/* Favorites Section */}
-        <div className="mt-4">
+        <div className="mt-6">
           {/* Favorites Header */}
           <div className="group relative flex items-center gap-3 px-3 py-2 rounded-md transition-colors"
             onMouseEnter={(e) => {
+              // Don't apply hover styles on touch devices or during touch interactions
+              if (isTouchDevice.current || isTouching.current) {
+                return;
+              }
               e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
             }}
             onMouseLeave={(e) => {
+              // Don't handle mouse leave on touch devices
+              if (isTouchDevice.current) {
+                return;
+              }
               e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+            onTouchStart={(e) => {
+              isTouching.current = true;
+              // Clear any existing hover state immediately
+              resetHoverState(e.currentTarget);
+            }}
+            onTouchEnd={(e) => {
+              const element = e.currentTarget;
+              // Immediately clear any hover state that might have been applied
+              resetHoverState(element);
+              // Reset touching flag after a short delay to allow click to fire
+              setTimeout(() => {
+                isTouching.current = false;
+              }, 100);
+              // Also clear hover state after delays to catch any delayed hover states from iOS
+              setTimeout(() => {
+                resetHoverState(element);
+              }, 50);
+              setTimeout(() => {
+                resetHoverState(element);
+              }, 200);
+              setTimeout(() => {
+                resetHoverState(element);
+              }, 500);
             }}
           >
             <button
               onClick={() => setIsFavoritesExpanded(!isFavoritesExpanded)}
-              className="flex items-center gap-2 flex-1 text-sm font-medium"
+              className="flex items-center gap-2 flex-1 text-sm font-semibold"
               style={{ color: 'var(--text-primary)' }}
             >
               <svg
@@ -941,6 +1063,9 @@ export function SidebarContent({ initialUser = null }: SidebarProps = {}) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
               <span>Favorites</span>
+              <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                {favorites.length}
+              </span>
             </button>
           </div>
 
@@ -971,19 +1096,51 @@ export function SidebarContent({ initialUser = null }: SidebarProps = {}) {
         </div>
 
         {/* People Section */}
-        <div className="mt-4">
+        <div className="mt-6">
           {/* People Header */}
           <div className="group relative flex items-center gap-3 px-3 py-2 rounded-md transition-colors"
             onMouseEnter={(e) => {
+              // Don't apply hover styles on touch devices or during touch interactions
+              if (isTouchDevice.current || isTouching.current) {
+                return;
+              }
               e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
             }}
             onMouseLeave={(e) => {
+              // Don't handle mouse leave on touch devices
+              if (isTouchDevice.current) {
+                return;
+              }
               e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+            onTouchStart={(e) => {
+              isTouching.current = true;
+              // Clear any existing hover state immediately
+              resetHoverState(e.currentTarget);
+            }}
+            onTouchEnd={(e) => {
+              const element = e.currentTarget;
+              // Immediately clear any hover state that might have been applied
+              resetHoverState(element);
+              // Reset touching flag after a short delay to allow click to fire
+              setTimeout(() => {
+                isTouching.current = false;
+              }, 100);
+              // Also clear hover state after delays to catch any delayed hover states from iOS
+              setTimeout(() => {
+                resetHoverState(element);
+              }, 50);
+              setTimeout(() => {
+                resetHoverState(element);
+              }, 200);
+              setTimeout(() => {
+                resetHoverState(element);
+              }, 500);
             }}
           >
             <button
               onClick={() => setIsPeopleExpanded(!isPeopleExpanded)}
-              className="flex items-center gap-2 flex-1 text-sm font-medium"
+              className="flex items-center gap-2 flex-1 text-sm font-semibold"
               style={{ color: 'var(--text-primary)' }}
             >
               <svg
@@ -995,6 +1152,9 @@ export function SidebarContent({ initialUser = null }: SidebarProps = {}) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
               <span>People</span>
+              <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                {people.length}
+              </span>
             </button>
             <IconButton
               variant="group-hover"

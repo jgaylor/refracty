@@ -55,7 +55,7 @@ export function SignupForm() {
           console.error('Error creating sample person:', error);
           // Don't block signup flow if sample creation fails
         }
-        router.push('/people');
+        router.push('/home');
       }
       router.refresh();
     }

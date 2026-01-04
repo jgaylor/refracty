@@ -3,7 +3,7 @@ import { InsightsList } from '@/components/insights/InsightsList';
 import { getUser } from '@/lib/supabase/auth';
 import { redirect } from 'next/navigation';
 
-export default async function InsightsPage() {
+export default async function HomePage() {
   const user = await getUser();
   if (!user) {
     redirect('/login');

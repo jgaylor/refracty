@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 export default async function LoginPage() {
   const user = await getUser();
   if (user) {
-    redirect('/people');
+    redirect('/home');
   }
   
   return (

@@ -164,7 +164,7 @@ export function PeopleListItem({ person, onDelete, onToggleFavorite, loading = f
         {/* Name */}
         <Link
           href={`/people/${person.id}`}
-          className="flex-1 min-w-0 text-sm font-medium truncate"
+          className="flex-1 min-w-0 text-sm font-light truncate"
           style={{ color: 'var(--text-primary)' }}
         >
           {person.name}

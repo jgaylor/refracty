@@ -33,7 +33,7 @@ export function PersonPageHeader({ personId, personName }: PersonPageHeaderProps
       if (response.ok && result.success) {
         showSuccessToast('Person deleted');
         setShowDeleteConfirm(false);
-        router.push('/insights');
+        router.push('/home');
         router.refresh();
       } else {
         throw new Error(result.error || 'Failed to delete person');

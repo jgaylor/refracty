@@ -4,7 +4,7 @@ import { getUser } from '@/lib/supabase/auth';
 export default async function Home() {
   const user = await getUser();
   if (user) {
-    redirect('/people');
+    redirect('/home');
   } else {
     redirect('/login');
   }
