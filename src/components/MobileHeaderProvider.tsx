@@ -3,14 +3,8 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 import type { PageAction } from './PageActions';
 
-export interface BreadcrumbItem {
-  label: string;
-  href?: string;
-}
-
 export interface MobileHeaderConfig {
   pageTitle?: string;
-  breadcrumbs?: BreadcrumbItem[];
   showBackButton?: boolean;
   backHref?: string;
   primaryAction?: {

@@ -45,7 +45,6 @@
     }
   }
 
-  /* Safari mobile spacing fix for breadcrumb dropdown button */
   @supports (-webkit-touch-callout: none) {
     button[class*="group"] span + svg {
       margin-left: 0.375rem; /* 6px - additional spacing for Safari */

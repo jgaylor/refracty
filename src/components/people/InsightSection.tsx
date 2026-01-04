@@ -1,9 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { IconButton } from '../IconButton';
 import { Insight, InsightCategory } from '@/lib/supabase/insights';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+
+const ALL_CATEGORIES: InsightCategory[] = [
+  'motivated_by',
+  'preferred_communication',
+  'works_best_when',
+  'collaboration_style',
+  'feedback_approach',
+];
+
+const CATEGORY_LABELS: Record<InsightCategory, string> = {
+  motivated_by: 'Motivated by',
+  preferred_communication: 'Preferred communication',
+  works_best_when: 'Works best when',
+  collaboration_style: 'Collaboration style',
+  feedback_approach: 'Feedback approach',
+};
 
 interface InsightSectionProps {
   category: InsightCategory;
@@ -12,6 +28,7 @@ interface InsightSectionProps {
   onAdd: (category: InsightCategory, content: string) => Promise<void>;
   onEdit: (id: string, content: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  onMoveCategory?: (id: string, newCategory: InsightCategory) => Promise<void>;
 }
 
 export function InsightSection({
@@ -21,6 +38,7 @@ export function InsightSection({
   onAdd,
   onEdit,
   onDelete,
+  onMoveCategory,
 }: InsightSectionProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [newContent, setNewContent] = useState('');
@@ -28,6 +46,10 @@ export function InsightSection({
   const [editingContent, setEditingContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string } | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [moveToMenuId, setMoveToMenuId] = useState<string | null>(null);
+  const [flipLeft, setFlipLeft] = useState(false);
+  const submenuRef = useRef<HTMLDivElement>(null);
 
   const handleAdd = async () => {
     if (!newContent.trim()) return;
@@ -88,9 +110,55 @@ export function InsightSection({
     }
   };
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (submenuRef.current && !submenuRef.current.contains(event.target as Node)) {
+        const target = event.target as HTMLElement;
+        if (!target.closest('[aria-label="Insight menu"]')) {
+          setOpenMenuId(null);
+          setMoveToMenuId(null);
+        }
+      }
+    };
+
+    if (openMenuId) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openMenuId]);
+
+  // Check if submenu should flip left
+  useEffect(() => {
+    if (moveToMenuId && submenuRef.current) {
+      const rect = submenuRef.current.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const shouldFlip = rect.right > viewportWidth - 200;
+      setFlipLeft(shouldFlip);
+    }
+  }, [moveToMenuId]);
+
+  const handleMoveCategory = async (insightId: string, newCategory: InsightCategory) => {
+    if (!onMoveCategory) return;
+
+    setLoading(true);
+    try {
+      await onMoveCategory(insightId, newCategory);
+      setMoveToMenuId(null);
+      setOpenMenuId(null);
+    } catch (error) {
+      console.error('Error moving insight category:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div 
-      className="p-4 rounded-lg border mb-4"
+      className="p-4 rounded-lg border mb-4 group"
       style={{ 
         backgroundColor: 'var(--bg-primary)', 
         borderColor: 'var(--border-color)' 
@@ -102,7 +170,8 @@ export function InsightSection({
         </h3>
         {!isAdding && (
           <IconButton
-            variant="compact"
+            variant="group-hover"
+            size="sm"
             onClick={() => setIsAdding(true)}
             disabled={loading}
             aria-label="Add insight"
@@ -165,19 +234,169 @@ export function InsightSection({
                 >
                   {insight.content}
                 </span>
-                <div className="flex gap-1">
-                  <IconButton
-                    variant="group-hover"
-                    destructive
-                    size="sm"
-                    onClick={() => handleDeleteClick(insight.id)}
-                    disabled={loading}
-                    aria-label="Delete insight"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </IconButton>
+                <div className="flex gap-1 relative">
+                  {/* Menu Button */}
+                  {onMoveCategory && (
+                    <div className="relative">
+                      <IconButton
+                        variant="group-hover"
+                        size="sm"
+                        onClick={() => setOpenMenuId(openMenuId === insight.id ? null : insight.id)}
+                        disabled={loading}
+                        isActive={openMenuId === insight.id}
+                        aria-label="Insight menu"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+                        </svg>
+                      </IconButton>
+
+                      {/* Dropdown Menu */}
+                      {openMenuId === insight.id && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-45"
+                            onClick={() => {
+                              setOpenMenuId(null);
+                              setMoveToMenuId(null);
+                            }}
+                          />
+                          <div
+                            className="absolute right-0 mt-1 w-56 rounded-md shadow-lg z-50 border"
+                            style={{
+                              backgroundColor: 'var(--bg-primary)',
+                              borderColor: 'var(--border-color)',
+                            }}
+                          >
+                            <div className="py-1">
+                              {/* Move to... */}
+                              <div className="relative">
+                                <button
+                                  onClick={() => setMoveToMenuId(moveToMenuId === insight.id ? null : insight.id)}
+                                  disabled={loading}
+                                  className="w-full text-left px-4 py-2 text-sm hover:bg-tertiary transition-colors disabled:opacity-50 flex items-center justify-between"
+                                  style={{
+                                    color: 'var(--text-primary)',
+                                    backgroundColor: moveToMenuId === insight.id ? 'var(--bg-tertiary)' : 'transparent',
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    if (moveToMenuId !== insight.id) {
+                                      e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                                    }
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    if (moveToMenuId !== insight.id) {
+                                      e.currentTarget.style.backgroundColor = 'transparent';
+                                    }
+                                  }}
+                                >
+                                  <span>Move to...</span>
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    style={{
+                                      transform: moveToMenuId === insight.id ? 'rotate(90deg)' : 'rotate(0deg)',
+                                      transition: 'transform 0.2s',
+                                    }}
+                                  >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                  </svg>
+                                </button>
+
+                                {/* Submenu for categories */}
+                                {moveToMenuId === insight.id && (
+                                  <div
+                                    ref={submenuRef}
+                                    className={`absolute ${flipLeft ? 'right-full mr-1' : 'left-full ml-1'} top-0 w-56 rounded-md shadow-lg z-[55] border`}
+                                    style={{
+                                      backgroundColor: 'var(--bg-primary)',
+                                      borderColor: 'var(--border-color)',
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <div className="py-1">
+                                      {ALL_CATEGORIES.map((cat) => {
+                                        // Skip current category
+                                        if (cat === category) {
+                                          return null;
+                                        }
+                                        return (
+                                          <button
+                                            key={cat}
+                                            onClick={() => handleMoveCategory(insight.id, cat)}
+                                            disabled={loading}
+                                            className="w-full text-left px-4 py-2 text-sm hover:bg-tertiary transition-colors disabled:opacity-50"
+                                            style={{
+                                              color: 'var(--text-primary)',
+                                              backgroundColor: 'transparent',
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              e.currentTarget.style.backgroundColor = 'transparent';
+                                            }}
+                                          >
+                                            {CATEGORY_LABELS[cat]}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Divider */}
+                              <div
+                                className="my-1"
+                                style={{ borderColor: 'var(--border-color)', borderTopWidth: '1px' }}
+                              />
+
+                              {/* Delete */}
+                              <button
+                                onClick={() => {
+                                  setOpenMenuId(null);
+                                  handleDeleteClick(insight.id);
+                                }}
+                                disabled={loading}
+                                className="w-full text-left px-4 py-2 text-sm hover:bg-tertiary transition-colors disabled:opacity-50"
+                                style={{
+                                  color: '#ef4444',
+                                  backgroundColor: 'transparent',
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = 'transparent';
+                                }}
+                              >
+                                Delete insight
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Delete Button (only if no move category handler) */}
+                  {!onMoveCategory && (
+                    <IconButton
+                      variant="group-hover"
+                      destructive
+                      size="sm"
+                      onClick={() => handleDeleteClick(insight.id)}
+                      disabled={loading}
+                      aria-label="Delete insight"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </IconButton>
+                  )}
                 </div>
               </>
             )}

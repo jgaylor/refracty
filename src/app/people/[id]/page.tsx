@@ -2,7 +2,6 @@ import { notFound, redirect } from 'next/navigation';
 import { getPersonById, getNotesByPerson } from '@/lib/supabase/people';
 import { getInsightsByPerson } from '@/lib/supabase/insights';
 import { PersonDetailClient } from '@/components/people/PersonDetailClient';
-import { PersonPageHeader } from '@/components/people/PersonPageHeader';
 import { getUser } from '@/lib/supabase/auth';
 
 interface PersonPageProps {
@@ -33,7 +32,6 @@ export default async function PersonPage({ params }: PersonPageProps) {
   return (
     <div>
       <div className="max-w-2xl mx-auto">
-        <PersonPageHeader personId={person.id} personName={person.name} />
         <PersonDetailClient
           person={person}
           initialInsights={insights}

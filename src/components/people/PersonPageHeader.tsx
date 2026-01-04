@@ -33,7 +33,7 @@ export function PersonPageHeader({ personId, personName }: PersonPageHeaderProps
       if (response.ok && result.success) {
         showSuccessToast('Person deleted');
         setShowDeleteConfirm(false);
-        router.push('/people');
+        router.push('/insights');
         router.refresh();
       } else {
         throw new Error(result.error || 'Failed to delete person');
@@ -65,12 +65,6 @@ export function PersonPageHeader({ personId, personName }: PersonPageHeaderProps
 
     setConfig({
       pageTitle: personName,
-      breadcrumbs: [
-        { label: 'People', href: '/people' },
-        { label: personName },
-      ],
-      showBackButton: true,
-      backHref: '/people',
       moreActions: mobileActions,
     });
 
@@ -81,13 +75,7 @@ export function PersonPageHeader({ personId, personName }: PersonPageHeaderProps
 
   return (
     <>
-      <PageHeader
-        breadcrumbs={[
-          { label: 'People', href: '/people' },
-          { label: personName },
-        ]}
-        actions={actions}
-      />
+      <PageHeader actions={actions} />
       <ConfirmDialog
         isOpen={showDeleteConfirm}
         title="Delete Person"

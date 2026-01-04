@@ -249,28 +249,36 @@ export function NotesTab({ personId, initialNotes, onNotesChange }: NotesTabProp
           <p className="text-neutral-500">No notes yet.</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {notes.map((note) => (
-            <div 
-              key={note.id} 
-              className="p-4 rounded-lg border relative group"
+        <div
+          className="rounded-lg border"
+          style={{
+            backgroundColor: 'var(--bg-primary)',
+            borderColor: 'var(--border-color)',
+          }}
+        >
+          {notes.map((note, index) => (
+            <div
+              key={note.id}
+              className={`px-4 py-4 group relative ${index > 0 ? 'border-t' : ''}`}
               style={{
-                backgroundColor: 'var(--bg-primary)',
-                borderColor: 'var(--border-color)',
+                borderColor: index > 0 ? 'var(--border-color)' : 'transparent',
               }}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
-                  <p className="mb-2" style={{ color: 'var(--text-primary)' }}>
+                  {/* Primary: Note Content */}
+                  <p className="text-base font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
                     {note.content}
                   </p>
+
+                  {/* Secondary: Metadata */}
                   <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
                     {formatDate(note.created_at)}
                   </p>
                 </div>
-                
+
                 {/* Menu Button */}
-                <div className="relative">
+                <div className="relative flex-shrink-0 self-center">
                   <IconButton
                     variant="group-hover"
                     size="sm"

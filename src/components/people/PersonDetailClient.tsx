@@ -1,11 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { Person, Note } from '@/lib/supabase/people';
 import { Insight } from '@/lib/supabase/insights';
 import { PersonHeader } from './PersonHeader';
 import { InsightsTab } from './InsightsTab';
 import { NotesTab } from './NotesTab';
+import { showSuccessToast, showErrorToast } from '@/lib/toast';
+import { useMobileHeader } from '@/components/MobileHeaderProvider';
 
 interface PersonDetailClientProps {
   person: Person;
@@ -18,6 +21,8 @@ export function PersonDetailClient({
   initialInsights,
   initialNotes,
 }: PersonDetailClientProps) {
+  const router = useRouter();
+  const { setConfig } = useMobileHeader();
   const [activeTab, setActiveTab] = useState<'insights' | 'notes'>('insights');
   const [notesCount, setNotesCount] = useState(initialNotes.length);
 
@@ -26,9 +31,49 @@ export function PersonDetailClient({
     setNotesCount(initialNotes.length);
   }, [initialNotes.length]);
 
+  const handleDelete = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/people/${person.id}`, {
+        method: 'DELETE',
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        showSuccessToast('Person deleted');
+        router.push('/insights');
+        router.refresh();
+      } else {
+        throw new Error(result.error || 'Failed to delete person');
+      }
+    } catch (error) {
+      console.error('Error deleting person:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete person';
+      showErrorToast(errorMessage);
+    }
+  }, [person.id, router]);
+
+  // Configure mobile header
+  useEffect(() => {
+    setConfig({
+      pageTitle: person.name,
+      moreActions: [
+        {
+          label: 'Delete person',
+          onClick: handleDelete,
+          destructive: true,
+        },
+      ],
+    });
+
+    return () => {
+      setConfig(null);
+    };
+  }, [person.name, setConfig, handleDelete]);
+
   return (
     <div>
-      <PersonHeader person={person} />
+      <PersonHeader person={person} onDelete={handleDelete} />
 
       {/* Tabs */}
       <div className="border-b mb-6" style={{ borderColor: 'var(--border-color)' }}>

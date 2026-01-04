@@ -137,6 +137,39 @@ export function InsightsTab({ personId, initialInsights }: InsightsTabProps) {
     }
   };
 
+  const handleMoveCategory = async (id: string, newCategory: InsightCategory) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/people/${personId}/insights/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ category: newCategory }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        // Optimistically update the insight category
+        // This will move it to the correct section via the grouping logic
+        setInsights((prev) =>
+          prev.map((insight) => (insight.id === id ? result.insight : insight))
+        );
+        showSuccessToast('Insight recategorized');
+      } else {
+        throw new Error(result.error || 'Failed to recategorize insight');
+      }
+    } catch (error) {
+      console.error('Error recategorizing insight:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to recategorize insight';
+      showErrorToast(errorMessage);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div>
       {ALL_CATEGORIES.map((category) => (
@@ -148,9 +181,9 @@ export function InsightsTab({ personId, initialInsights }: InsightsTabProps) {
           onAdd={handleAdd}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onMoveCategory={handleMoveCategory}
         />
       ))}
     </div>
   );
 }
-

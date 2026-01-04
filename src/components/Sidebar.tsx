@@ -6,6 +6,11 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import { SidebarSkeleton } from './skeletons/SidebarSkeleton';
+import { PersonWithNote } from '@/lib/supabase/people';
+import { PeopleListItem } from './people/PeopleListItem';
+import { AddPersonModal } from './people/AddPersonModal';
+import { IconButton } from './IconButton';
+import { showSuccessToast, showErrorToast } from '@/lib/toast';
 
 // Icon components defined outside the main component
 const UsersIcon = ({ className }: { className?: string }) => (
@@ -31,20 +36,18 @@ const SettingsIcon = ({ className }: { className?: string }) => (
 const getUserInitials = (user: User): string => {
   // Try to get initials from user_metadata.full_name first
   if (user.user_metadata?.full_name) {
-    const parts = user.user_metadata.full_name.trim().split(' ');
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    const trimmed = user.user_metadata.full_name.trim();
+    if (trimmed.length > 0) {
+      return trimmed[0].toUpperCase();
     }
-    return user.user_metadata.full_name.substring(0, 2).toUpperCase();
   }
   
   // Fall back to email
   if (user.email) {
     const emailParts = user.email.split('@')[0];
-    if (emailParts.length >= 2) {
-      return emailParts.substring(0, 2).toUpperCase();
+    if (emailParts.length > 0) {
+      return emailParts[0].toUpperCase();
     }
-    return emailParts[0].toUpperCase();
   }
   
   return 'U';
@@ -61,6 +64,50 @@ export function Sidebar({ initialUser = null }: SidebarProps = {}) {
   const userMenuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
+  
+  // People section state
+  const [people, setPeople] = useState<PersonWithNote[]>([]);
+  const [favorites, setFavorites] = useState<PersonWithNote[]>([]);
+  const [peopleLoading, setPeopleLoading] = useState(true);
+  // Load expanded state from localStorage, default to true (expanded) for both
+  const [isPeopleExpanded, setIsPeopleExpandedState] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sidebar-people-expanded');
+      return saved !== null ? saved === 'true' : true;
+    }
+    return true;
+  });
+  const [isFavoritesExpanded, setIsFavoritesExpandedState] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sidebar-favorites-expanded');
+      return saved !== null ? saved === 'true' : true;
+    }
+    return true;
+  });
+  const [peopleSearchQuery, setPeopleSearchQuery] = useState('');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Wrapper functions to persist state to localStorage
+  const setIsPeopleExpanded = (value: boolean | ((prev: boolean) => boolean)) => {
+    setIsPeopleExpandedState((prev) => {
+      const newValue = typeof value === 'function' ? value(prev) : value;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('sidebar-people-expanded', String(newValue));
+      }
+      return newValue;
+    });
+  };
+
+  const setIsFavoritesExpanded = (value: boolean | ((prev: boolean) => boolean)) => {
+    setIsFavoritesExpandedState((prev) => {
+      const newValue = typeof value === 'function' ? value(prev) : value;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('sidebar-favorites-expanded', String(newValue));
+      }
+      return newValue;
+    });
+  };
 
   useEffect(() => {
     const supabase = createClient();
@@ -104,6 +151,37 @@ export function Sidebar({ initialUser = null }: SidebarProps = {}) {
     };
   }, [isUserMenuOpen]);
 
+  // Fetch people data
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchPeople = async () => {
+      setPeopleLoading(true);
+      try {
+        const [peopleRes, favoritesRes] = await Promise.all([
+          fetch('/api/people'),
+          fetch('/api/people?favorites=true'),
+        ]);
+
+        if (peopleRes.ok) {
+          const peopleData = await peopleRes.json();
+          setPeople(peopleData.people || []);
+        }
+
+        if (favoritesRes.ok) {
+          const favoritesData = await favoritesRes.json();
+          setFavorites(favoritesData.people || []);
+        }
+      } catch (error) {
+        console.error('Error fetching people:', error);
+      } finally {
+        setPeopleLoading(false);
+      }
+    };
+
+    fetchPeople();
+  }, [user]);
+
   // Logout handler
   const handleLogout = async () => {
     const supabase = createClient();
@@ -111,6 +189,113 @@ export function Sidebar({ initialUser = null }: SidebarProps = {}) {
     router.push('/');
     router.refresh();
   };
+
+  // Handle delete person
+  const handleDeletePerson = async (personId: string) => {
+    setDeleteLoading(true);
+    try {
+      const response = await fetch(`/api/people/${personId}`, {
+        method: 'DELETE',
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setPeople((prev) => prev.filter((p) => p.id !== personId));
+        setFavorites((prev) => prev.filter((p) => p.id !== personId));
+        showSuccessToast('Person deleted');
+        router.refresh();
+      } else {
+        throw new Error(result.error || 'Failed to delete person');
+      }
+    } catch (error) {
+      console.error('Error deleting person:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete person';
+      showErrorToast(errorMessage);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  // Handle toggle favorite
+  // This function is called AFTER the API call has already been made in PeopleListItem
+  // So we just need to update the state, not make another API call
+  const handleToggleFavorite = async (personId: string, isFavorite: boolean) => {
+    // Update people list
+    setPeople((prev) => {
+      const updated = prev.map((p) => 
+        p.id === personId 
+          ? { ...p, is_favorite: isFavorite } 
+          : p
+      );
+      return updated;
+    });
+
+    // Refetch both people and favorites to ensure state is in sync with database
+    try {
+      const [peopleRes, favoritesRes] = await Promise.all([
+        fetch('/api/people'),
+        fetch('/api/people?favorites=true'),
+      ]);
+      
+      if (peopleRes.ok) {
+        const peopleData = await peopleRes.json();
+        setPeople(peopleData.people || []);
+      }
+      
+      if (favoritesRes.ok) {
+        const favoritesData = await favoritesRes.json();
+        setFavorites(favoritesData.people || []);
+      }
+    } catch (fetchError) {
+      console.error('Error refetching favorites:', fetchError);
+      // Fallback: manually update favorites list if refetch fails
+      if (isFavorite) {
+        const personWithNote = people.find((p) => p.id === personId);
+        if (personWithNote) {
+          setFavorites((prev) => {
+            if (prev.some((p) => p.id === personId)) {
+              return prev.map((p) => (p.id === personId ? { ...personWithNote, is_favorite: true } : p));
+            }
+            return [...prev, { ...personWithNote, is_favorite: true }];
+          });
+        }
+      } else {
+        setFavorites((prev) => prev.filter((p) => p.id !== personId));
+      }
+    }
+  };
+
+  // Handle person added
+  const handlePersonAdded = async () => {
+    // Refresh people list
+    try {
+      const [peopleRes, favoritesRes] = await Promise.all([
+        fetch('/api/people'),
+        fetch('/api/people?favorites=true'),
+      ]);
+
+      if (peopleRes.ok) {
+        const peopleData = await peopleRes.json();
+        setPeople(peopleData.people || []);
+      }
+
+      if (favoritesRes.ok) {
+        const favoritesData = await favoritesRes.json();
+        setFavorites(favoritesData.people || []);
+      }
+    } catch (error) {
+      console.error('Error refreshing people:', error);
+    }
+  };
+
+  // Filter people based on search
+  const filteredPeople = people.filter((person) => {
+    const query = peopleSearchQuery.toLowerCase().trim();
+    if (!query) return true;
+    return person.name.toLowerCase().includes(query);
+  });
+
 
   // Show skeleton while loading
   if (loading) {
@@ -128,7 +313,7 @@ export function Sidebar({ initialUser = null }: SidebarProps = {}) {
     <div className="h-full flex flex-col">
       {/* Header with branding and user menu */}
       <div className="flex items-center justify-between py-8 px-4">
-        <Link href="/people" className="flex items-center gap-3 px-3 hover:opacity-80 transition-opacity">
+        <Link href="/insights" className="flex items-center gap-3 px-3 hover:opacity-80 transition-opacity">
           {/* Avatar placeholder with "R" - aligned with menu icons */}
           <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
             <span className="text-white font-medium text-sm">R</span>
@@ -143,7 +328,7 @@ export function Sidebar({ initialUser = null }: SidebarProps = {}) {
             className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center flex-shrink-0 hover:opacity-80 transition-opacity"
             aria-label="User menu"
           >
-            <span className="text-xs font-medium">{getUserInitials(user)}</span>
+            <span className="text-[10px] font-medium">{getUserInitials(user)}</span>
           </button>
 
           {isUserMenuOpen && (
@@ -226,19 +411,152 @@ export function Sidebar({ initialUser = null }: SidebarProps = {}) {
           <span>Home</span>
         </Link>
 
-        {/* People */}
-        <Link
-          href="/people"
-          className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-            isActive('/people')
-              ? 'bg-primary text-white'
-              : 'sidebar-link'
-          }`}
-        >
-          <UsersIcon className="w-5 h-5 flex-shrink-0" />
-          <span>People</span>
-        </Link>
+        {/* Favorites Section */}
+        <div className="mt-4">
+          {/* Favorites Header */}
+          <div className="group relative flex items-center gap-3 px-3 py-2 rounded-md transition-colors"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+          >
+            <button
+              onClick={() => setIsFavoritesExpanded(!isFavoritesExpanded)}
+              className="flex items-center gap-2 flex-1 text-sm font-medium"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              <svg
+                className={`w-4 h-4 transition-transform ${isFavoritesExpanded ? 'rotate-90' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              <span>Favorites</span>
+            </button>
+          </div>
+
+          {/* Favorites List */}
+          {isFavoritesExpanded && (
+            <div className="space-y-0.5 max-h-64 overflow-y-auto">
+              {peopleLoading ? (
+                <div className="px-3 py-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                  Loading...
+                </div>
+              ) : favorites.length === 0 ? (
+                <div className="px-3 py-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                  No favorites yet
+                </div>
+              ) : (
+                favorites.map((person) => (
+                  <PeopleListItem
+                    key={person.id}
+                    person={person}
+                    onDelete={handleDeletePerson}
+                    onToggleFavorite={handleToggleFavorite}
+                    loading={deleteLoading}
+                  />
+                ))
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* People Section */}
+        <div className="mt-4">
+          {/* People Header */}
+          <div className="group relative flex items-center gap-3 px-3 py-2 rounded-md transition-colors"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+          >
+            <button
+              onClick={() => setIsPeopleExpanded(!isPeopleExpanded)}
+              className="flex items-center gap-2 flex-1 text-sm font-medium"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              <svg
+                className={`w-4 h-4 transition-transform ${isPeopleExpanded ? 'rotate-90' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              <span>People</span>
+            </button>
+            <IconButton
+              variant="group-hover"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsAddModalOpen(true);
+              }}
+              aria-label="Add person"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </IconButton>
+          </div>
+
+          {/* People Search */}
+          {isPeopleExpanded && (
+            <div className="px-3 mt-2 mb-2">
+              <input
+                type="search"
+                placeholder="Search people..."
+                value={peopleSearchQuery}
+                onChange={(e) => setPeopleSearchQuery(e.target.value)}
+                className="w-full px-2 py-1.5 text-xs border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+                style={{
+                  backgroundColor: 'var(--bg-primary)',
+                  borderColor: 'var(--border-color)',
+                  color: 'var(--text-primary)',
+                }}
+              />
+            </div>
+          )}
+
+          {/* People List */}
+          {isPeopleExpanded && (
+            <div className="space-y-0.5 max-h-64 overflow-y-auto">
+              {peopleLoading ? (
+                <div className="px-3 py-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                  Loading...
+                </div>
+              ) : filteredPeople.length === 0 ? (
+                <div className="px-3 py-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                  {peopleSearchQuery ? 'No matches' : 'No people yet'}
+                </div>
+              ) : (
+                filteredPeople.map((person) => (
+                  <PeopleListItem
+                    key={person.id}
+                    person={person}
+                    onDelete={handleDeletePerson}
+                    onToggleFavorite={handleToggleFavorite}
+                    loading={deleteLoading}
+                  />
+                ))
+              )}
+            </div>
+          )}
+        </div>
       </nav>
+
+      {/* Add Person Modal */}
+      <AddPersonModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onPersonAdded={handlePersonAdded}
+      />
     </div>
   );
 
@@ -257,6 +575,50 @@ export function SidebarContent({ initialUser = null }: SidebarProps = {}) {
   const userMenuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
+  
+  // People section state
+  const [people, setPeople] = useState<PersonWithNote[]>([]);
+  const [favorites, setFavorites] = useState<PersonWithNote[]>([]);
+  const [peopleLoading, setPeopleLoading] = useState(true);
+  // Load expanded state from localStorage, default to true (expanded) for both
+  const [isPeopleExpanded, setIsPeopleExpandedState] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sidebar-people-expanded');
+      return saved !== null ? saved === 'true' : true;
+    }
+    return true;
+  });
+  const [isFavoritesExpanded, setIsFavoritesExpandedState] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sidebar-favorites-expanded');
+      return saved !== null ? saved === 'true' : true;
+    }
+    return true;
+  });
+  const [peopleSearchQuery, setPeopleSearchQuery] = useState('');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Wrapper functions to persist state to localStorage
+  const setIsPeopleExpanded = (value: boolean | ((prev: boolean) => boolean)) => {
+    setIsPeopleExpandedState((prev) => {
+      const newValue = typeof value === 'function' ? value(prev) : value;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('sidebar-people-expanded', String(newValue));
+      }
+      return newValue;
+    });
+  };
+
+  const setIsFavoritesExpanded = (value: boolean | ((prev: boolean) => boolean)) => {
+    setIsFavoritesExpandedState((prev) => {
+      const newValue = typeof value === 'function' ? value(prev) : value;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('sidebar-favorites-expanded', String(newValue));
+      }
+      return newValue;
+    });
+  };
 
   useEffect(() => {
     const supabase = createClient();
@@ -297,6 +659,37 @@ export function SidebarContent({ initialUser = null }: SidebarProps = {}) {
     };
   }, [isUserMenuOpen]);
 
+  // Fetch people data
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchPeople = async () => {
+      setPeopleLoading(true);
+      try {
+        const [peopleRes, favoritesRes] = await Promise.all([
+          fetch('/api/people'),
+          fetch('/api/people?favorites=true'),
+        ]);
+
+        if (peopleRes.ok) {
+          const peopleData = await peopleRes.json();
+          setPeople(peopleData.people || []);
+        }
+
+        if (favoritesRes.ok) {
+          const favoritesData = await favoritesRes.json();
+          setFavorites(favoritesData.people || []);
+        }
+      } catch (error) {
+        console.error('Error fetching people:', error);
+      } finally {
+        setPeopleLoading(false);
+      }
+    };
+
+    fetchPeople();
+  }, [user]);
+
   // Logout handler
   const handleLogout = async () => {
     const supabase = createClient();
@@ -304,6 +697,113 @@ export function SidebarContent({ initialUser = null }: SidebarProps = {}) {
     router.push('/');
     router.refresh();
   };
+
+  // Handle delete person
+  const handleDeletePerson = async (personId: string) => {
+    setDeleteLoading(true);
+    try {
+      const response = await fetch(`/api/people/${personId}`, {
+        method: 'DELETE',
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setPeople((prev) => prev.filter((p) => p.id !== personId));
+        setFavorites((prev) => prev.filter((p) => p.id !== personId));
+        showSuccessToast('Person deleted');
+        router.refresh();
+      } else {
+        throw new Error(result.error || 'Failed to delete person');
+      }
+    } catch (error) {
+      console.error('Error deleting person:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete person';
+      showErrorToast(errorMessage);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  // Handle toggle favorite
+  // This function is called AFTER the API call has already been made in PeopleListItem
+  // So we just need to update the state, not make another API call
+  const handleToggleFavorite = async (personId: string, isFavorite: boolean) => {
+    // Update people list
+    setPeople((prev) => {
+      const updated = prev.map((p) => 
+        p.id === personId 
+          ? { ...p, is_favorite: isFavorite } 
+          : p
+      );
+      return updated;
+    });
+
+    // Refetch both people and favorites to ensure state is in sync with database
+    try {
+      const [peopleRes, favoritesRes] = await Promise.all([
+        fetch('/api/people'),
+        fetch('/api/people?favorites=true'),
+      ]);
+      
+      if (peopleRes.ok) {
+        const peopleData = await peopleRes.json();
+        setPeople(peopleData.people || []);
+      }
+      
+      if (favoritesRes.ok) {
+        const favoritesData = await favoritesRes.json();
+        setFavorites(favoritesData.people || []);
+      }
+    } catch (fetchError) {
+      console.error('Error refetching favorites:', fetchError);
+      // Fallback: manually update favorites list if refetch fails
+      if (isFavorite) {
+        const personWithNote = people.find((p) => p.id === personId);
+        if (personWithNote) {
+          setFavorites((prev) => {
+            if (prev.some((p) => p.id === personId)) {
+              return prev.map((p) => (p.id === personId ? { ...personWithNote, is_favorite: true } : p));
+            }
+            return [...prev, { ...personWithNote, is_favorite: true }];
+          });
+        }
+      } else {
+        setFavorites((prev) => prev.filter((p) => p.id !== personId));
+      }
+    }
+  };
+
+  // Handle person added
+  const handlePersonAdded = async () => {
+    // Refresh people list
+    try {
+      const [peopleRes, favoritesRes] = await Promise.all([
+        fetch('/api/people'),
+        fetch('/api/people?favorites=true'),
+      ]);
+
+      if (peopleRes.ok) {
+        const peopleData = await peopleRes.json();
+        setPeople(peopleData.people || []);
+      }
+
+      if (favoritesRes.ok) {
+        const favoritesData = await favoritesRes.json();
+        setFavorites(favoritesData.people || []);
+      }
+    } catch (error) {
+      console.error('Error refreshing people:', error);
+    }
+  };
+
+  // Filter people based on search
+  const filteredPeople = people.filter((person) => {
+    const query = peopleSearchQuery.toLowerCase().trim();
+    if (!query) return true;
+    return person.name.toLowerCase().includes(query);
+  });
+
 
   if (loading) {
     return <SidebarSkeleton />;
@@ -319,7 +819,7 @@ export function SidebarContent({ initialUser = null }: SidebarProps = {}) {
     <div className="h-full flex flex-col">
       {/* Header with branding and user menu */}
       <div className="flex items-center justify-between py-8 px-4">
-        <Link href="/people" className="flex items-center gap-3 px-3 hover:opacity-80 transition-opacity">
+        <Link href="/insights" className="flex items-center gap-3 px-3 hover:opacity-80 transition-opacity">
           <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
             <span className="text-white font-medium text-sm">R</span>
           </div>
@@ -333,7 +833,7 @@ export function SidebarContent({ initialUser = null }: SidebarProps = {}) {
             className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center flex-shrink-0 hover:opacity-80 transition-opacity"
             aria-label="User menu"
           >
-            <span className="text-xs font-medium">{getUserInitials(user)}</span>
+            <span className="text-[10px] font-medium">{getUserInitials(user)}</span>
           </button>
 
           {isUserMenuOpen && (
@@ -416,19 +916,152 @@ export function SidebarContent({ initialUser = null }: SidebarProps = {}) {
           <span>Home</span>
         </Link>
 
-        {/* People */}
-        <Link
-          href="/people"
-          className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-            isActive('/people')
-              ? 'bg-primary text-white'
-              : 'sidebar-link'
-          }`}
-        >
-          <UsersIcon className="w-5 h-5 flex-shrink-0" />
-          <span>People</span>
-        </Link>
+        {/* Favorites Section */}
+        <div className="mt-4">
+          {/* Favorites Header */}
+          <div className="group relative flex items-center gap-3 px-3 py-2 rounded-md transition-colors"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+          >
+            <button
+              onClick={() => setIsFavoritesExpanded(!isFavoritesExpanded)}
+              className="flex items-center gap-2 flex-1 text-sm font-medium"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              <svg
+                className={`w-4 h-4 transition-transform ${isFavoritesExpanded ? 'rotate-90' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              <span>Favorites</span>
+            </button>
+          </div>
+
+          {/* Favorites List */}
+          {isFavoritesExpanded && (
+            <div className="space-y-0.5 max-h-64 overflow-y-auto">
+              {peopleLoading ? (
+                <div className="px-3 py-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                  Loading...
+                </div>
+              ) : favorites.length === 0 ? (
+                <div className="px-3 py-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                  No favorites yet
+                </div>
+              ) : (
+                favorites.map((person) => (
+                  <PeopleListItem
+                    key={person.id}
+                    person={person}
+                    onDelete={handleDeletePerson}
+                    onToggleFavorite={handleToggleFavorite}
+                    loading={deleteLoading}
+                  />
+                ))
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* People Section */}
+        <div className="mt-4">
+          {/* People Header */}
+          <div className="group relative flex items-center gap-3 px-3 py-2 rounded-md transition-colors"
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+          >
+            <button
+              onClick={() => setIsPeopleExpanded(!isPeopleExpanded)}
+              className="flex items-center gap-2 flex-1 text-sm font-medium"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              <svg
+                className={`w-4 h-4 transition-transform ${isPeopleExpanded ? 'rotate-90' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              <span>People</span>
+            </button>
+            <IconButton
+              variant="group-hover"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsAddModalOpen(true);
+              }}
+              aria-label="Add person"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            </IconButton>
+          </div>
+
+          {/* People Search */}
+          {isPeopleExpanded && (
+            <div className="px-3 mt-2 mb-2">
+              <input
+                type="search"
+                placeholder="Search people..."
+                value={peopleSearchQuery}
+                onChange={(e) => setPeopleSearchQuery(e.target.value)}
+                className="w-full px-2 py-1.5 text-xs border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+                style={{
+                  backgroundColor: 'var(--bg-primary)',
+                  borderColor: 'var(--border-color)',
+                  color: 'var(--text-primary)',
+                }}
+              />
+            </div>
+          )}
+
+          {/* People List */}
+          {isPeopleExpanded && (
+            <div className="space-y-0.5 max-h-64 overflow-y-auto">
+              {peopleLoading ? (
+                <div className="px-3 py-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                  Loading...
+                </div>
+              ) : filteredPeople.length === 0 ? (
+                <div className="px-3 py-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                  {peopleSearchQuery ? 'No matches' : 'No people yet'}
+                </div>
+              ) : (
+                filteredPeople.map((person) => (
+                  <PeopleListItem
+                    key={person.id}
+                    person={person}
+                    onDelete={handleDeletePerson}
+                    onToggleFavorite={handleToggleFavorite}
+                    loading={deleteLoading}
+                  />
+                ))
+              )}
+            </div>
+          )}
+        </div>
       </nav>
+
+      {/* Add Person Modal */}
+      <AddPersonModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onPersonAdded={handlePersonAdded}
+      />
     </div>
   );
 }

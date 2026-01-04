@@ -233,6 +233,47 @@ export function InsightsList({ initialItems, initialHasMore }: InsightsListProps
     }
   };
 
+  const handleMoveCategory = async (insightId: string, category: InsightCategory) => {
+    const item = items.find((i) => i.id === insightId && i.type === 'insight');
+    if (!item) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/people/${item.person.id}/insights/${insightId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ category }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        // Update item in place with new category
+        setItems((prev) =>
+          prev.map((i) =>
+            i.id === insightId && i.type === 'insight'
+              ? { ...i, category }
+              : i
+          )
+        );
+        showSuccessToast('Insight recategorized');
+        setMoveToMenuId(null);
+        setOpenMenuId(null);
+        router.refresh();
+      } else {
+        throw new Error(result.error || 'Failed to recategorize insight');
+      }
+    } catch (error) {
+      console.error('Error recategorizing insight:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to recategorize insight';
+      showErrorToast(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (items.length === 0) {
     return (
       <div className="text-center py-12">
@@ -327,59 +368,69 @@ export function InsightsList({ initialItems, initialHasMore }: InsightsListProps
                       }}
                     >
                       <div className="py-1">
-                        {/* Move to... (only for notes) */}
-                        {item.type === 'note' && (
-                          <div className="relative">
-                            <button
-                              onClick={() => setMoveToMenuId(moveToMenuId === item.id ? null : item.id)}
-                              disabled={loading}
-                              className="w-full text-left px-4 py-2 text-sm hover:bg-tertiary transition-colors disabled:opacity-50 flex items-center justify-between"
+                        {/* Move to... (for both notes and insights) */}
+                        <div className="relative">
+                          <button
+                            onClick={() => setMoveToMenuId(moveToMenuId === item.id ? null : item.id)}
+                            disabled={loading}
+                            className="w-full text-left px-4 py-2 text-sm hover:bg-tertiary transition-colors disabled:opacity-50 flex items-center justify-between"
+                            style={{
+                              color: 'var(--text-primary)',
+                              backgroundColor: moveToMenuId === item.id ? 'var(--bg-tertiary)' : 'transparent',
+                            }}
+                            onMouseEnter={(e) => {
+                              if (moveToMenuId !== item.id) {
+                                e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (moveToMenuId !== item.id) {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                              }
+                            }}
+                          >
+                            <span>Move to...</span>
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
                               style={{
-                                color: 'var(--text-primary)',
-                                backgroundColor: moveToMenuId === item.id ? 'var(--bg-tertiary)' : 'transparent',
-                              }}
-                              onMouseEnter={(e) => {
-                                if (moveToMenuId !== item.id) {
-                                  e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
-                                }
-                              }}
-                              onMouseLeave={(e) => {
-                                if (moveToMenuId !== item.id) {
-                                  e.currentTarget.style.backgroundColor = 'transparent';
-                                }
+                                transform: moveToMenuId === item.id ? 'rotate(90deg)' : 'rotate(0deg)',
+                                transition: 'transform 0.2s',
                               }}
                             >
-                              <span>Move to...</span>
-                              <svg
-                                className="w-4 h-4"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                style={{
-                                  transform: moveToMenuId === item.id ? 'rotate(90deg)' : 'rotate(0deg)',
-                                  transition: 'transform 0.2s',
-                                }}
-                              >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                              </svg>
-                            </button>
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </button>
 
-                            {/* Submenu for categories */}
-                            {moveToMenuId === item.id && (
-                              <div
-                                ref={submenuRef}
-                                className={`absolute ${flipLeft ? 'right-full mr-1' : 'left-full ml-1'} top-0 w-56 rounded-md shadow-lg z-[55] border`}
-                                style={{
-                                  backgroundColor: 'var(--bg-primary)',
-                                  borderColor: 'var(--border-color)',
-                                }}
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <div className="py-1">
-                                  {ALL_CATEGORIES.map((category) => (
+                          {/* Submenu for categories */}
+                          {moveToMenuId === item.id && (
+                            <div
+                              ref={submenuRef}
+                              className={`absolute ${flipLeft ? 'right-full mr-1' : 'left-full ml-1'} top-0 w-56 rounded-md shadow-lg z-[55] border`}
+                              style={{
+                                backgroundColor: 'var(--bg-primary)',
+                                borderColor: 'var(--border-color)',
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <div className="py-1">
+                                {ALL_CATEGORIES.map((category) => {
+                                  // For insights, skip the current category
+                                  if (item.type === 'insight' && item.category === category) {
+                                    return null;
+                                  }
+                                  return (
                                     <button
                                       key={category}
-                                      onClick={() => handleMoveToInsight(item.id, category)}
+                                      onClick={() => {
+                                        if (item.type === 'note') {
+                                          handleMoveToInsight(item.id, category);
+                                        } else {
+                                          handleMoveCategory(item.id, category);
+                                        }
+                                      }}
                                       disabled={loading}
                                       className="w-full text-left px-4 py-2 text-sm hover:bg-tertiary transition-colors disabled:opacity-50"
                                       style={{
@@ -395,20 +446,18 @@ export function InsightsList({ initialItems, initialHasMore }: InsightsListProps
                                     >
                                       {CATEGORY_LABELS[category]}
                                     </button>
-                                  ))}
-                                </div>
+                                  );
+                                })}
                               </div>
-                            )}
-                          </div>
-                        )}
+                            </div>
+                          )}
+                        </div>
 
-                        {/* Divider (only if Move to... is shown) */}
-                        {item.type === 'note' && (
-                          <div
-                            className="my-1"
-                            style={{ borderColor: 'var(--border-color)', borderTopWidth: '1px' }}
-                          />
-                        )}
+                        {/* Divider */}
+                        <div
+                          className="my-1"
+                          style={{ borderColor: 'var(--border-color)', borderTopWidth: '1px' }}
+                        />
 
                         {/* Delete */}
                         <button

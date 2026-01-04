@@ -1,11 +1,14 @@
 import { createClient } from '@/lib/supabase/server';
 import { getUser } from '@/lib/supabase/auth';
 import { NextResponse } from 'next/server';
-import { CreatePersonInput, getPeople } from '@/lib/supabase/people';
+import { CreatePersonInput, getPeople, getFavorites } from '@/lib/supabase/people';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const people = await getPeople();
+    const { searchParams } = new URL(request.url);
+    const favorites = searchParams.get('favorites') === 'true';
+    
+    const people = favorites ? await getFavorites() : await getPeople();
     return NextResponse.json({ people });
   } catch (error) {
     console.error('Error in GET /api/people:', error);

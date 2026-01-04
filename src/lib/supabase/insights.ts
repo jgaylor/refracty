@@ -25,7 +25,8 @@ export interface CreateInsightInput {
 }
 
 export interface UpdateInsightInput {
-  content: string;
+  content?: string;
+  category?: InsightCategory;
 }
 
 export interface InsightWithPerson extends Insight {
@@ -293,17 +294,32 @@ export async function updateInsight(
     return { success: false, error: 'User not authenticated' };
   }
 
-  if (!input.content || input.content.trim().length === 0) {
-    return { success: false, error: 'Content is required' };
+  // At least one field must be provided
+  if (!input.content && !input.category) {
+    return { success: false, error: 'Either content or category must be provided' };
+  }
+
+  // Content validation (only if provided)
+  if (input.content !== undefined && (!input.content || input.content.trim().length === 0)) {
+    return { success: false, error: 'Content cannot be empty' };
   }
 
   const supabase = await createClient();
+  const updateData: { content?: string; category?: InsightCategory; updated_at: string } = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (input.content !== undefined) {
+    updateData.content = input.content.trim();
+  }
+
+  if (input.category !== undefined) {
+    updateData.category = input.category;
+  }
+
   const { data, error } = await supabase
     .from('insights')
-    .update({
-      content: input.content.trim(),
-      updated_at: new Date().toISOString(),
-    })
+    .update(updateData)
     .eq('id', id)
     .eq('user_id', user.id)
     .select()

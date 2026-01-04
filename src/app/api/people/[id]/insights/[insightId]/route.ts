@@ -16,19 +16,34 @@ export async function PATCH(
 
     const body: UpdateInsightInput = await request.json();
 
-    if (!body.content || body.content.trim().length === 0) {
-      return NextResponse.json({ error: 'Content is required' }, { status: 400 });
+    // At least one field must be provided
+    if (!body.content && !body.category) {
+      return NextResponse.json({ error: 'Either content or category must be provided' }, { status: 400 });
+    }
+
+    // Content validation (only if provided)
+    if (body.content !== undefined && (!body.content || body.content.trim().length === 0)) {
+      return NextResponse.json({ error: 'Content cannot be empty' }, { status: 400 });
     }
 
     const supabase = await createClient();
 
+    const updateData: { content?: string; category?: string; updated_at: string } = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (body.content !== undefined) {
+      updateData.content = body.content.trim();
+    }
+
+    if (body.category !== undefined) {
+      updateData.category = body.category;
+    }
+
     // Verify insight belongs to user and person
     const { data: insight, error: insightError } = await supabase
       .from('insights')
-      .update({
-        content: body.content.trim(),
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq('id', insightId)
       .eq('user_id', user.id)
       .eq('person_id', id)

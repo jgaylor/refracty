@@ -15,9 +15,7 @@ export function MobileHeader() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
-  const [isBreadcrumbDropdownOpen, setIsBreadcrumbDropdownOpen] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
-  const breadcrumbDropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
   const { config } = useMobileHeader();
@@ -94,9 +92,9 @@ export function MobileHeader() {
     setIsMoreMenuOpen(false);
   };
 
-  // Determine if back button should show (check if pathname has dynamic segments)
-  const showBackButton = config?.showBackButton ?? (pathname.includes('/people/') && pathname !== '/people');
-  const backHref = config?.backHref ?? (pathname.includes('/people/') ? '/people' : '/');
+  // Determine if back button should show
+  const showBackButton = config?.showBackButton ?? false;
+  const backHref = config?.backHref ?? '/';
 
   return (
     <header
@@ -143,100 +141,12 @@ export function MobileHeader() {
             </IconButton>
           </div>
 
-          {/* Page title - left aligned with breadcrumb dropdown */}
+          {/* Page title */}
           <div className="flex-1 flex items-center justify-start min-w-0">
             {config?.pageTitle && (
-              <div className="relative" ref={breadcrumbDropdownRef}>
-                {config.breadcrumbs && config.breadcrumbs.length > 1 ? (
-                  <>
-                    <button
-                      onClick={() => setIsBreadcrumbDropdownOpen(!isBreadcrumbDropdownOpen)}
-                      className="flex items-center gap-2 min-w-0 group"
-                    >
-                      <span className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
-                        {config.pageTitle}
-                      </span>
-                      <svg
-                        className={`w-4 h-4 flex-shrink-0 transition-transform ${isBreadcrumbDropdownOpen ? 'rotate-180' : ''}`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        style={{ color: 'var(--text-secondary)' }}
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                    {isBreadcrumbDropdownOpen && (
-                      <div
-                        className="absolute top-full left-0 mt-2 w-64 rounded-md shadow-lg z-50 border"
-                        style={{
-                          backgroundColor: 'var(--bg-primary)',
-                          borderColor: 'var(--border-color)',
-                        }}
-                      >
-                        {/* Title */}
-                        <div className="px-4 py-2 border-b" style={{ borderColor: 'var(--border-color)' }}>
-                          <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>
-                            Breadcrumb
-                          </span>
-                        </div>
-                        {/* Breadcrumb items */}
-                        <div className="py-1">
-                          {config.breadcrumbs.map((item, index) => {
-                            const isLast = index === config.breadcrumbs!.length - 1;
-                            return (
-                              <div key={index}>
-                                {item.href && !isLast ? (
-                                  <Link
-                                    href={item.href}
-                                    onClick={() => setIsBreadcrumbDropdownOpen(false)}
-                                    className="flex items-center px-4 py-2 text-sm hover:bg-tertiary transition-colors"
-                                    style={{
-                                      color: 'var(--text-primary)',
-                                      backgroundColor: 'transparent',
-                                    }}
-                                    onMouseEnter={(e) => {
-                                      e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      e.currentTarget.style.backgroundColor = 'transparent';
-                                    }}
-                                  >
-                                    <span>{item.label}</span>
-                                  </Link>
-                                ) : (
-                                  <div
-                                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium"
-                                    style={{
-                                      color: 'var(--text-primary)',
-                                      backgroundColor: 'var(--bg-tertiary)',
-                                    }}
-                                  >
-                                    <svg
-                                      className="w-4 h-4 flex-shrink-0"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      viewBox="0 0 24 24"
-                                      style={{ color: 'var(--text-tertiary)' }}
-                                    >
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4V5.4C4 8.76031 4 10.4405 4.65396 11.7239C5.2292 12.8529 6.14708 13.7708 7.27606 14.346C8.55953 15 10.2397 15 13.6 15H20M20 15L15 10M20 15L15 20" />
-                                    </svg>
-                                    <span className="flex-1">{item.label}</span>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <span className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
-                    {config.pageTitle}
-                  </span>
-                )}
-              </div>
+              <span className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
+                {config.pageTitle}
+              </span>
             )}
           </div>
 

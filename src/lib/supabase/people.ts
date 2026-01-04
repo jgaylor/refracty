@@ -6,6 +6,7 @@ export interface Person {
   user_id: string;
   name: string;
   vibe_summary: string | null;
+  is_favorite?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -49,6 +50,64 @@ export async function getPeople(): Promise<PersonWithNote[]> {
 
   if (peopleError) {
     console.error('Error fetching people:', peopleError);
+    return [];
+  }
+
+  if (!people || people.length === 0) {
+    return [];
+  }
+
+  // Fetch the first note for each person
+  const personIds = people.map(p => p.id);
+  const { data: notes, error: notesError } = await supabase
+    .from('notes')
+    .select('*')
+    .in('person_id', personIds)
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: true });
+
+  if (notesError) {
+    console.error('Error fetching notes:', notesError);
+    // Return people without notes if notes fetch fails
+    return people.map(p => ({ ...p, first_note: null }));
+  }
+
+  // Group notes by person_id and get the first one
+  const notesByPersonId = new Map<string, Note>();
+  notes?.forEach(note => {
+    if (!notesByPersonId.has(note.person_id)) {
+      notesByPersonId.set(note.person_id, note);
+    }
+  });
+
+  // Combine people with their first note
+  return people.map(person => ({
+    ...person,
+    first_note: notesByPersonId.get(person.id) || null,
+  }));
+}
+
+/**
+ * Get all favorited people for the current user
+ */
+export async function getFavorites(): Promise<PersonWithNote[]> {
+  const user = await getUser();
+  if (!user) {
+    return [];
+  }
+
+  const supabase = await createClient();
+  
+  // Fetch favorited people for the current user
+  const { data: people, error: peopleError } = await supabase
+    .from('people')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('is_favorite', true)
+    .order('created_at', { ascending: false });
+
+  if (peopleError) {
+    console.error('Error fetching favorites:', peopleError);
     return [];
   }
 
@@ -141,7 +200,7 @@ export async function getNotesByPerson(personId: string): Promise<Note[]> {
  */
 export async function updatePerson(
   id: string,
-  updates: { name?: string; vibe_summary?: string | null }
+  updates: { name?: string; vibe_summary?: string | null; is_favorite?: boolean }
 ): Promise<{ success: boolean; person?: Person; error?: string }> {
   const user = await getUser();
   if (!user) {
@@ -160,6 +219,10 @@ export async function updatePerson(
   
   if (updates.vibe_summary !== undefined) {
     updateData.vibe_summary = updates.vibe_summary?.trim() || null;
+  }
+
+  if (updates.is_favorite !== undefined) {
+    updateData.is_favorite = updates.is_favorite;
   }
 
   const { data, error } = await supabase
