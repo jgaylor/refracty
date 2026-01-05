@@ -429,13 +429,23 @@ export function StyleGuide() {
       <section>
         <h2 className="text-2xl font-bold mb-6">Insight Capture Component</h2>
         <div className="max-w-3xl mx-auto">
-          <div className="border-t py-4 rounded-lg shadow-lg" style={{ background: 'var(--bg-gradient)', borderColor: 'var(--border-color)' }}>
+          <div 
+            className="py-4 shadow-lg"
+            style={{ 
+              backgroundColor: 'var(--bg-primary)',
+              borderTop: '1px solid var(--border-color)',
+              borderLeft: '1px solid var(--border-color)',
+              borderRight: '1px solid var(--border-color)',
+              borderTopLeftRadius: '1rem',
+              borderTopRightRadius: '1rem',
+            }}
+          >
             <div className="px-4">
               <div className="flex items-center gap-3">
                 <div className="flex-1 relative">
                   <input
                     type="text"
-                    placeholder="Capture an insight about someone..."
+                    placeholder="Add a note about someone..."
                     className="input w-full px-4 py-3 pr-20 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     disabled
                   />

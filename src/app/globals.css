@@ -169,11 +169,16 @@
   }
 
   .btn-secondary {
+    @apply btn;
     background-color: var(--bg-tertiary);
     color: var(--text-primary);
   }
   .btn-secondary:hover {
     background-color: var(--border-color);
+  }
+  .btn-secondary:disabled {
+    opacity: 0.6;
+    background-color: var(--bg-tertiary);
   }
 
   .btn-outline {

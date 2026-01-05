@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
+import { Logo } from './Logo';
 
 export function Header() {
   const [user, setUser] = useState<User | null>(null);
@@ -40,13 +41,11 @@ export function Header() {
   }
 
   return (
-    <header className="hidden md:block fixed top-0 left-0 right-0 z-50 backdrop-blur-sm border-b" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)', opacity: 0.8 }}>
+    <header className="hidden md:block fixed top-0 left-0 right-0 z-50 backdrop-blur-sm border-b" style={{ backgroundColor: 'var(--bg-primary-transparent)', borderColor: 'var(--border-color)' }}>
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <Link href="/" className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-              Refracty
-            </Link>
+            <Logo href="/" />
           </div>
 
           <div className="flex items-center gap-4">
