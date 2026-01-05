@@ -76,7 +76,6 @@ export function InsightsList({ initialItems, initialHasMore }: InsightsListProps
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [moveToMenuId, setMoveToMenuId] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; type: 'note' | 'insight' } | null>(null);
-  const [flipLeft, setFlipLeft] = useState(false);
   const submenuRef = useRef<HTMLDivElement>(null);
   const observerTarget = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -145,16 +144,6 @@ export function InsightsList({ initialItems, initialHasMore }: InsightsListProps
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [openMenuId]);
-
-  // Check if submenu should flip left
-  useEffect(() => {
-    if (moveToMenuId && submenuRef.current) {
-      const rect = submenuRef.current.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-      const shouldFlip = rect.right > viewportWidth - 200;
-      setFlipLeft(shouldFlip);
-    }
-  }, [moveToMenuId]);
 
   const handleDeleteClick = (item: FeedItem) => {
     setOpenMenuId(null);
@@ -404,13 +393,12 @@ export function InsightsList({ initialItems, initialHasMore }: InsightsListProps
                             </svg>
                           </button>
 
-                          {/* Submenu for categories */}
+                          {/* Submenu for categories - Inline vertical expansion */}
                           {moveToMenuId === item.id && (
                             <div
                               ref={submenuRef}
-                              className={`absolute ${flipLeft ? 'right-full mr-1' : 'left-full ml-1'} top-0 w-56 rounded-md shadow-lg z-[55] border`}
+                              className="w-full border-t"
                               style={{
-                                backgroundColor: 'var(--bg-primary)',
                                 borderColor: 'var(--border-color)',
                               }}
                               onClick={(e) => e.stopPropagation()}

@@ -37,7 +37,6 @@ export function NotesTab({ personId, initialNotes, onNotesChange }: NotesTabProp
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [moveToMenuId, setMoveToMenuId] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [flipLeft, setFlipLeft] = useState(false);
   const submenuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -55,37 +54,6 @@ export function NotesTab({ personId, initialNotes, onNotesChange }: NotesTabProp
       onNotesChange?.(initialNotes.length);
     }
   }, [initialNotes, notes, onNotesChange]);
-
-  // Detect available space and flip submenu to left if needed
-  useEffect(() => {
-    const checkSpace = () => {
-      if (moveToMenuId && submenuRef.current) {
-        // Get the parent menu item to measure available space
-        const parentElement = submenuRef.current.parentElement;
-        if (parentElement) {
-          const parentRect = parentElement.getBoundingClientRect();
-          const submenuWidth = 224; // w-56 = 14rem = 224px
-          const padding = 16; // 16px padding from viewport edge
-          const spaceOnRight = window.innerWidth - parentRect.right - padding;
-          const hasSpaceOnRight = spaceOnRight >= submenuWidth;
-          setFlipLeft(!hasSpaceOnRight);
-        }
-      } else {
-        setFlipLeft(false);
-      }
-    };
-
-    if (moveToMenuId) {
-      // Use requestAnimationFrame to ensure DOM is updated
-      requestAnimationFrame(() => {
-        checkSpace();
-      });
-    }
-
-    // Recalculate on window resize
-    window.addEventListener('resize', checkSpace);
-    return () => window.removeEventListener('resize', checkSpace);
-  }, [moveToMenuId]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -346,13 +314,12 @@ export function NotesTab({ personId, initialNotes, onNotesChange }: NotesTabProp
                               </svg>
                             </button>
 
-                            {/* Submenu for categories */}
+                            {/* Submenu for categories - Inline vertical expansion */}
                             {moveToMenuId === note.id && (
                               <div
                                 ref={submenuRef}
-                                className={`absolute ${flipLeft ? 'right-full mr-1' : 'left-full ml-1'} top-0 w-56 rounded-md shadow-lg z-[55] border`}
+                                className="w-full border-t"
                                 style={{
-                                  backgroundColor: 'var(--bg-primary)',
                                   borderColor: 'var(--border-color)',
                                 }}
                                 onClick={(e) => e.stopPropagation()}
