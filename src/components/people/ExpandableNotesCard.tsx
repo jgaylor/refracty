@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { IconButton } from '../IconButton';
-import { useRouter } from 'next/navigation';
 import { Note } from '@/lib/supabase/people';
 import { InsightCategory } from '@/lib/supabase/insights';
 import { showSuccessToast, showErrorToast } from '@/lib/toast';
@@ -11,7 +10,6 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 interface ExpandableNotesCardProps {
   personId: string;
   initialNotes: Note[];
-  onNotesChange?: (count: number) => void;
 }
 
 const CATEGORY_LABELS: Record<InsightCategory, string> = {
@@ -30,7 +28,7 @@ const ALL_CATEGORIES: InsightCategory[] = [
   'feedback_approach',
 ];
 
-export function ExpandableNotesCard({ personId, initialNotes, onNotesChange }: ExpandableNotesCardProps) {
+export function ExpandableNotesCard({ personId, initialNotes }: ExpandableNotesCardProps) {
   const [notes, setNotes] = useState<Note[]>(initialNotes);
   const [loading, setLoading] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -38,19 +36,49 @@ export function ExpandableNotesCard({ personId, initialNotes, onNotesChange }: E
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const submenuRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
 
-  // Sync notes with initialNotes when it changes, but preserve optimistic updates
+  // Simple sync: add new notes from initialNotes, replace when server confirms removals
   useEffect(() => {
     const currentNoteIds = new Set(notes.map(n => n.id));
     const initialNoteIds = new Set(initialNotes.map(n => n.id));
     
     const hasNewNotes = initialNotes.some(note => !currentNoteIds.has(note.id));
-    if (hasNewNotes && initialNotes.length >= notes.length) {
-      setNotes(initialNotes);
-      onNotesChange?.(initialNotes.length);
+    const hasRemovedNotes = initialNotes.length < notes.length;
+    
+    // When new notes arrive from server, add them (avoid duplicates)
+    if (hasNewNotes) {
+      setNotes((prev) => {
+        const existingIds = new Set(prev.map(n => n.id));
+        const newNotes = initialNotes.filter(note => !existingIds.has(note.id));
+        return [...newNotes, ...prev];
+      });
     }
-  }, [initialNotes, notes, onNotesChange]);
+    // When server confirms removals (fewer notes), replace state
+    else if (hasRemovedNotes) {
+      setNotes(initialNotes);
+    }
+  }, [initialNotes]);
+
+  // Listen for note added events to update count optimistically
+  useEffect(() => {
+    const handleNoteAdded = (event: CustomEvent<{ personId: string; note: Note }>) => {
+      if (event.detail.personId === personId) {
+        setNotes((prev) => {
+          // Check if note already exists to avoid duplicates
+          if (prev.some(n => n.id === event.detail.note.id)) {
+            return prev;
+          }
+          // Add note to the beginning of the list
+          return [event.detail.note, ...prev];
+        });
+      }
+    };
+
+    window.addEventListener('noteAdded', handleNoteAdded as EventListener);
+    return () => {
+      window.removeEventListener('noteAdded', handleNoteAdded as EventListener);
+    };
+  }, [personId]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -103,16 +131,20 @@ export function ExpandableNotesCard({ personId, initialNotes, onNotesChange }: E
       const result = await response.json();
 
       if (response.ok && result.success) {
+        // Optimistically remove the note
         setNotes((prev) => {
-          const updated = prev.filter((note) => note.id !== noteId);
-          onNotesChange?.(updated.length);
-          return updated;
+          return prev.filter((note) => note.id !== noteId);
         });
+        
+        // Dispatch event to update insights list
+        window.dispatchEvent(new CustomEvent('noteMovedToInsight', {
+          detail: { personId, insight: result.insight }
+        }));
+        
         showSuccessToast('Note moved to insight', {
           href: `/people/${personId}`,
           text: 'View person',
         });
-        router.refresh();
       } else {
         throw new Error(result.error || 'Failed to move note to insight');
       }
@@ -143,14 +175,12 @@ export function ExpandableNotesCard({ personId, initialNotes, onNotesChange }: E
       const result = await response.json();
 
       if (response.ok && result.success) {
+        // Optimistically remove the note
         setNotes((prev) => {
-          const updated = prev.filter((note) => note.id !== noteId);
-          onNotesChange?.(updated.length);
-          return updated;
+          return prev.filter((note) => note.id !== noteId);
         });
         showSuccessToast('Note deleted');
         setDeleteConfirm(null);
-        router.refresh();
       } else {
         throw new Error(result.error || 'Failed to delete note');
       }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Insight, InsightCategory } from '@/lib/supabase/insights';
 import { InsightSection } from './InsightSection';
 import { showSuccessToast, showErrorToast } from '@/lib/toast';
@@ -29,6 +29,41 @@ const ALL_CATEGORIES: InsightCategory[] = [
 export function InsightsTab({ personId, initialInsights }: InsightsTabProps) {
   const [insights, setInsights] = useState<Insight[]>(initialInsights);
   const [loading, setLoading] = useState(false);
+
+  // Listen for note moved to insight events
+  useEffect(() => {
+    const handleNoteMovedToInsight = (event: CustomEvent<{ personId: string; insight: Insight }>) => {
+      if (event.detail.personId === personId) {
+        setInsights((prev) => {
+          // Check if insight already exists to avoid duplicates
+          if (prev.some(i => i.id === event.detail.insight.id)) {
+            return prev;
+          }
+          // Add insight to the list
+          return [...prev, event.detail.insight];
+        });
+      }
+    };
+
+    window.addEventListener('noteMovedToInsight', handleNoteMovedToInsight as EventListener);
+    return () => {
+      window.removeEventListener('noteMovedToInsight', handleNoteMovedToInsight as EventListener);
+    };
+  }, [personId]);
+
+  // Sync with initialInsights when new insights arrive from server
+  useEffect(() => {
+    const currentInsightIds = new Set(insights.map(i => i.id));
+    const hasNewInsights = initialInsights.some(insight => !currentInsightIds.has(insight.id));
+    
+    if (hasNewInsights) {
+      setInsights((prev) => {
+        const existingIds = new Set(prev.map(i => i.id));
+        const newInsights = initialInsights.filter(insight => !existingIds.has(insight.id));
+        return [...prev, ...newInsights];
+      });
+    }
+  }, [initialInsights]);
 
   // Group insights by category
   const insightsByCategory = insights.reduce((acc, insight) => {

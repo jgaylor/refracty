@@ -96,7 +96,12 @@ export function InsightCapture() {
           text: 'View person',
         });
         
-        router.refresh();
+        // Dispatch custom event to update notes card if on person detail page
+        if (currentPersonId === personId && result.note) {
+          window.dispatchEvent(new CustomEvent('noteAdded', { 
+            detail: { personId, note: result.note } 
+          }));
+        }
       } else {
         throw new Error(result.error || 'Failed to create note');
       }

@@ -42,7 +42,7 @@ export function SkeletonText({
       style={{
         width,
         height,
-        borderRadius: '0.25rem',
+        borderRadius: '9999px',
       }}
     />
   );

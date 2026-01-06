@@ -23,12 +23,6 @@ export function PersonDetailClient({
 }: PersonDetailClientProps) {
   const router = useRouter();
   const { setConfig } = useMobileHeader();
-  const [notesCount, setNotesCount] = useState(initialNotes.length);
-
-  // Sync notesCount with initialNotes when it changes (e.g., after router.refresh from InsightCapture)
-  useEffect(() => {
-    setNotesCount(initialNotes.length);
-  }, [initialNotes.length]);
 
   const handleDelete = useCallback(async () => {
     try {
@@ -75,15 +69,12 @@ export function PersonDetailClient({
       <PersonHeader person={person} onDelete={handleDelete} />
 
       {/* Expandable Notes Card */}
-      {notesCount > 0 && (
-        <div className="mb-6">
-          <ExpandableNotesCard
-            personId={person.id}
-            initialNotes={initialNotes}
-            onNotesChange={setNotesCount}
-          />
-        </div>
-      )}
+      <div className="mb-6">
+        <ExpandableNotesCard
+          personId={person.id}
+          initialNotes={initialNotes}
+        />
+      </div>
 
       {/* Insights Content */}
       <InsightsTab personId={person.id} initialInsights={initialInsights} />
