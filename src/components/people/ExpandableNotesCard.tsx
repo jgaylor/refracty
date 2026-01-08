@@ -73,7 +73,6 @@ export function ExpandableNotesCard({ personId, initialNotes, onNotesChange }: E
 
   const handleDeleteNote = async (noteId: string) => {
     setLoading(true);
-    setOpenMenuId(null);
     try {
       const response = await fetch(`/api/people/${personId}/notes/${noteId}`, {
         method: 'DELETE',
