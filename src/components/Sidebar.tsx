@@ -20,12 +20,6 @@ const UsersIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const HomeIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-  </svg>
-);
-
 const SettingsIcon = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -342,45 +336,39 @@ export function Sidebar({ initialUser = null }: SidebarProps = {}) {
   const sidebarContent = (
     <div className="h-full flex flex-col">
       {/* Sticky Header Section */}
-      <div className="flex-shrink-0 border-b" style={{ borderColor: 'var(--border-color)', paddingTop: '1.5rem', paddingBottom: '1.5rem' }}>
-        {/* Header with branding */}
-        <div className="flex items-center py-4 px-4">
-          <Link href="/home" className="flex items-center gap-3 px-3 hover:opacity-80 transition-opacity">
+      <div className="flex-shrink-0 border-b flex items-center" style={{ borderColor: 'var(--border-color)', paddingTop: '1.5rem', paddingBottom: '1.5rem', minHeight: '4rem' }}>
+        {/* Header with branding and user avatar */}
+        <div className="flex items-center justify-between w-full px-4">
+          <Link href="/home" className="flex items-center gap-3 px-3 hover:opacity-80 transition-opacity flex-shrink-0">
             {/* Avatar placeholder with "R" - aligned with menu icons */}
             <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)' }}>
               <span className="text-white font-medium text-sm">R</span>
             </div>
             <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Refracty</span>
           </Link>
-        </div>
 
-        {/* User and Home - Sticky */}
-        <div className="px-4 space-y-1">
-          {/* User */}
-          <div className="relative" ref={userMenuRef}>
+          {/* User Avatar */}
+          <div className="relative flex items-center pr-3" ref={userMenuRef}>
             <button
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              className="group relative flex items-center gap-3 px-3 py-2 rounded-md sidebar-link transition-colors w-full"
+              className="group relative rounded-md transition-colors flex items-center"
             >
-{user.user_metadata?.avatar_url ? (
+              {user.user_metadata?.avatar_url ? (
                 <img
                   src={user.user_metadata.avatar_url}
                   alt="User avatar"
-                  className="w-5 h-5 rounded-full object-cover flex-shrink-0"
+                  className="w-6 h-6 rounded-full object-cover flex-shrink-0"
                 />
               ) : (
-                <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
-                  <span className="text-white text-[9px] font-medium">{getUserInitials(user)}</span>
+                <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
+                  <span className="text-white text-xs font-medium">{getUserInitials(user)}</span>
                 </div>
               )}
-              <span className="flex-1 text-sm text-left truncate font-semibold" style={{ color: 'var(--text-primary)' }}>
-                {getUserDisplayName(user)}
-              </span>
             </button>
 
             {isUserMenuOpen && (
               <div
-                className="absolute left-0 mt-1 w-48 rounded-md shadow-lg z-50 border"
+                className="absolute top-full right-0 mt-1 w-48 rounded-md shadow-lg z-50 border"
                 style={{
                   backgroundColor: 'var(--bg-primary)',
                   borderColor: 'var(--border-color)',
@@ -441,21 +429,11 @@ export function Sidebar({ initialUser = null }: SidebarProps = {}) {
               </div>
             )}
           </div>
-
-          {/* Home */}
-          <Link
-            href="/home"
-            className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-semibold sidebar-link transition-colors"
-          >
-            <HomeIcon className="w-5 h-5 flex-shrink-0" />
-            <span>Home</span>
-          </Link>
         </div>
       </div>
 
       {/* Scrollable Navigation items */}
       <nav className="flex-1 overflow-y-auto px-4 pt-4 space-y-3 scrollbar-hide" style={{ paddingBottom: '10rem' }}>
-
         {/* Favorites Section */}
         <div className="mt-1">
           {/* Favorites Header */}
@@ -951,44 +929,38 @@ export function SidebarContent({ initialUser = null }: SidebarProps = {}) {
   return (
     <div className="h-full flex flex-col">
       {/* Sticky Header Section */}
-      <div className="flex-shrink-0 border-b" style={{ borderColor: 'var(--border-color)', paddingTop: '1.5rem', paddingBottom: '1.5rem' }}>
-        {/* Header with branding */}
-        <div className="flex items-center py-4 px-4">
-          <Link href="/home" className="flex items-center gap-3 px-3 hover:opacity-80 transition-opacity">
+      <div className="flex-shrink-0 border-b flex items-center" style={{ borderColor: 'var(--border-color)', paddingTop: '1.5rem', paddingBottom: '1.5rem', minHeight: '4rem' }}>
+        {/* Header with branding and user avatar */}
+        <div className="flex items-center justify-between w-full px-4">
+          <Link href="/home" className="flex items-center gap-3 px-3 hover:opacity-80 transition-opacity flex-shrink-0">
             <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)' }}>
               <span className="text-white font-medium text-sm">R</span>
             </div>
             <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Refracty</span>
           </Link>
-        </div>
 
-        {/* User and Home - Sticky */}
-        <div className="px-4 space-y-1">
-          {/* User */}
-          <div className="relative" ref={userMenuRef}>
+          {/* User Avatar */}
+          <div className="relative flex items-center pr-3" ref={userMenuRef}>
             <button
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              className="group relative flex items-center gap-3 px-3 py-2 rounded-md sidebar-link transition-colors w-full"
+              className="group relative rounded-md transition-colors flex items-center"
             >
-{user.user_metadata?.avatar_url ? (
+              {user.user_metadata?.avatar_url ? (
                 <img
                   src={user.user_metadata.avatar_url}
                   alt="User avatar"
-                  className="w-5 h-5 rounded-full object-cover flex-shrink-0"
+                  className="w-6 h-6 rounded-full object-cover flex-shrink-0"
                 />
               ) : (
-                <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
-                  <span className="text-white text-[9px] font-medium">{getUserInitials(user)}</span>
+                <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
+                  <span className="text-white text-xs font-medium">{getUserInitials(user)}</span>
                 </div>
               )}
-              <span className="flex-1 text-sm text-left truncate font-semibold" style={{ color: 'var(--text-primary)' }}>
-                {getUserDisplayName(user)}
-              </span>
             </button>
 
             {isUserMenuOpen && (
               <div
-                className="absolute left-0 mt-1 w-48 rounded-md shadow-lg z-50 border"
+                className="absolute top-full right-0 mt-1 w-48 rounded-md shadow-lg z-50 border"
                 style={{
                   backgroundColor: 'var(--bg-primary)',
                   borderColor: 'var(--border-color)',
@@ -1049,21 +1021,11 @@ export function SidebarContent({ initialUser = null }: SidebarProps = {}) {
               </div>
             )}
           </div>
-
-          {/* Home */}
-          <Link
-            href="/home"
-            className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-semibold sidebar-link transition-colors"
-          >
-            <HomeIcon className="w-5 h-5 flex-shrink-0" />
-            <span>Home</span>
-          </Link>
         </div>
       </div>
 
       {/* Scrollable Navigation items */}
       <nav className="flex-1 overflow-y-auto px-4 pt-4 space-y-3 scrollbar-hide" style={{ paddingBottom: '10rem' }}>
-
         {/* Favorites Section */}
         <div className="mt-1">
           {/* Favorites Header */}

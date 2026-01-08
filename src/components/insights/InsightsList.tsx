@@ -8,12 +8,14 @@ import { InsightsListSkeleton } from './InsightsListSkeleton';
 import { IconButton } from '../IconButton';
 import { ConfirmDialog } from '../ConfirmDialog';
 import { showSuccessToast, showErrorToast } from '@/lib/toast';
+import { NoteItem } from '../people/NoteItem';
 
 interface InsightsListProps {
   initialItems: FeedItem[];
   initialHasMore: boolean;
 }
 
+// formatRelativeTime is now in NoteItem component
 function formatRelativeTime(dateString: string): string {
   const date = new Date(dateString);
   const now = new Date();
@@ -184,96 +186,57 @@ export function InsightsList({ initialItems, initialHasMore }: InsightsListProps
           borderColor: 'var(--border-color)',
         }}
       >
-        {items.map((item, index) => (
-          <div
-            key={item.id}
-            className={`px-4 py-4 group relative ${index > 0 ? 'border-t' : ''}`}
-            style={{
-              borderColor: index > 0 ? 'var(--border-color)' : 'transparent',
-            }}
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                {/* Primary: Note Content */}
-                <p className="text-base font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                  {item.content}
-                </p>
+        {items.map((item, index) => {
+          // Only render notes using NoteItem component
+          if (item.type === 'note') {
+            return (
+              <NoteItem
+                key={item.id}
+                note={item}
+                showPersonName={true}
+                personName={item.person.name}
+                personId={item.person.id}
+                onDelete={handleDeleteClick}
+                isDeleting={loading}
+                borderTop={index > 0}
+              />
+            );
+          }
+          
+          // For insights, keep the existing rendering (for now)
+          return (
+            <div
+              key={item.id}
+              className={`px-4 py-4 group relative ${index > 0 ? 'border-t' : ''}`}
+              style={{
+                borderColor: index > 0 ? 'var(--border-color)' : 'transparent',
+              }}
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  {/* Primary: Insight Content */}
+                  <p className="text-base font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
+                    {item.content}
+                  </p>
 
-                {/* Secondary: Metadata */}
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Link
-                    href={`/people/${item.person.id}`}
-                    className="text-xs font-medium hover:opacity-80 transition-opacity"
-                    style={{ color: 'var(--text-tertiary)' }}
-                  >
-                    {item.person.name}
-                  </Link>
-                  <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                    {formatRelativeTime(item.created_at)}
-                  </span>
+                  {/* Secondary: Metadata */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Link
+                      href={`/people/${item.person.id}`}
+                      className="text-xs font-medium hover:opacity-80 transition-opacity"
+                      style={{ color: 'var(--text-tertiary)' }}
+                    >
+                      {item.person.name}
+                    </Link>
+                    <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                      {formatRelativeTime(item.created_at)}
+                    </span>
+                  </div>
                 </div>
               </div>
-
-              {/* Menu Button */}
-              <div className="relative flex-shrink-0 self-center">
-                <IconButton
-                  variant="group-hover"
-                  size="sm"
-                  onClick={() => setOpenMenuId(openMenuId === item.id ? null : item.id)}
-                  disabled={loading}
-                  isActive={openMenuId === item.id}
-                  aria-label="Item menu"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
-                  </svg>
-                </IconButton>
-
-                {/* Dropdown Menu */}
-                {openMenuId === item.id && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-45"
-                      onClick={() => {
-                        setOpenMenuId(null);
-                      }}
-                    />
-                    <div
-                      data-menu-dropdown
-                      className="absolute right-0 mt-1 w-56 rounded-md shadow-lg z-50 border"
-                      style={{
-                        backgroundColor: 'var(--bg-primary)',
-                        borderColor: 'var(--border-color)',
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <div className="py-1">
-                        {/* Delete */}
-                        <button
-                          onClick={() => handleDeleteClick(item.id)}
-                          disabled={loading}
-                          className="w-full text-left px-4 py-2 text-sm hover:bg-tertiary transition-colors disabled:opacity-50"
-                          style={{
-                            color: '#ef4444',
-                            backgroundColor: 'transparent',
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                          }}
-                        >
-                          Delete note
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {loading && (
