@@ -7,6 +7,7 @@ import { AddPersonModal } from './people/AddPersonModal';
 import { PersonWithNote } from '@/lib/supabase/people';
 import { showSuccessToast, showErrorToast } from '@/lib/toast';
 import { useTouchDevice } from '@/hooks/useTouchDevice';
+import { Shimmer } from './Shimmer';
 
 const MAX_LENGTH = 144;
 
@@ -21,13 +22,14 @@ export function InsightCapture() {
   const [pendingNoteContent, setPendingNoteContent] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const isTouchDevice = useTouchDevice();
+  const [isFocused, setIsFocused] = useState(false);
 
   // Extract person ID from pathname if on person detail page
   const personIdMatch = pathname.match(/^\/people\/([^/]+)$/);
   const currentPersonId = personIdMatch ? personIdMatch[1] : null;
 
-  // Determine if we should show the component (exclude /settings and /style-guide)
-  const shouldShow = pathname !== '/settings' && pathname !== '/style-guide';
+  // Determine if we should show the component (exclude /settings, /style-guide, and /home)
+  const shouldShow = pathname !== '/settings' && pathname !== '/style-guide' && pathname !== '/home';
 
   // Fetch people list when modal opens
   useEffect(() => {
@@ -168,16 +170,20 @@ export function InsightCapture() {
   };
 
   // Use state for placeholder to ensure consistent server/client render
-  const [placeholder, setPlaceholder] = useState('Add a note about someone...');
+  const [placeholder, setPlaceholder] = useState('New note');
 
   // Update placeholder after mount to avoid hydration mismatch
   useEffect(() => {
     if (currentPerson) {
-      setPlaceholder(`Add a note about ${currentPerson.name}...`);
+      setPlaceholder(`New note for ${currentPerson.name}`);
     } else {
-      setPlaceholder('Add a note about someone...');
+      setPlaceholder('New note');
     }
-  }, [currentPerson]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPerson?.name]);
+
+  // Only show shimmer when we have person data (if on person page) or when not on person page
+  const shouldShowShimmer = !currentPersonId || (currentPersonId && currentPerson !== null);
 
   return (
     <>
@@ -210,10 +216,30 @@ export function InsightCapture() {
                         setContent(newValue);
                       }
                     }}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
                     disabled={loading}
-                    className="input w-full px-4 py-3 pr-20 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    className={`input w-full px-4 py-3 pr-20 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${!content && !isFocused ? 'placeholder-hidden' : ''}`}
                     maxLength={MAX_LENGTH}
                   />
+                  {/* Shimmer placeholder overlay */}
+                  {!content && !isFocused && shouldShowShimmer && (
+                    <div
+                      className="absolute left-0 top-0 px-4 py-3 pointer-events-none flex items-center overflow-hidden min-w-0"
+                      style={{ 
+                        height: '100%',
+                        width: 'calc(100% - 5rem)' // Account for character counter space
+                      }}
+                    >
+                      <Shimmer 
+                        text={placeholder} 
+                        size="base"
+                        speed={2}
+                        colors={['#3b82f6', '#60a5fa', '#93c5fd', '#60a5fa', '#3b82f6']}
+                        className="w-full"
+                      />
+                    </div>
+                  )}
                   <span
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-xs"
                     style={{ color: 'var(--text-tertiary)' }}

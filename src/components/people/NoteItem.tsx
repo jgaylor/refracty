@@ -99,7 +99,7 @@ export function NoteItem({
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           {/* Primary: Note Content */}
-          <p className="text-base font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
+          <p className="text-sm font-normal mb-1" style={{ color: 'var(--text-primary)' }}>
             {note.content}
           </p>
 

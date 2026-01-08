@@ -55,11 +55,24 @@ export function Shimmer({
     WebkitTextFillColor: 'transparent',
     color: 'transparent',
     animation: `shimmer-text ${speed}s linear infinite`,
+    // iOS compatibility fixes
+    display: 'inline-block',
+    WebkitBoxDecorationBreak: 'clone',
+    boxDecorationBreak: 'clone',
+    willChange: 'background-position',
+    transform: 'translateZ(0)',
+    WebkitBackfaceVisibility: 'hidden',
+    backfaceVisibility: 'hidden',
+    // Text truncation for single-line display
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    maxWidth: '100%',
   };
 
   return (
     <span
-      className={`${sizeClasses[size]} ${className}`}
+      className={`${sizeClasses[size]} ${className} shimmer-ios-fix`}
       style={style}
       aria-label={text}
     >

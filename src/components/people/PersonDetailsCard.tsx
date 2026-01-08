@@ -17,7 +17,7 @@ export function PersonDetailsCard({ personId, notesCount }: PersonDetailsCardPro
       {/* Summary Section */}
       <div>
         <div
-          className="w-full px-4 py-4 flex items-center"
+          className="w-full px-4 pt-4 pb-2 flex items-center"
           style={{ color: 'var(--text-primary)' }}
         >
           <span className="text-base font-medium flex items-center gap-2">
@@ -39,7 +39,7 @@ export function PersonDetailsCard({ personId, notesCount }: PersonDetailsCardPro
         }}
       >
         <div
-          className="w-full px-4 py-4 flex items-center"
+          className="w-full px-4 pt-4 pb-2 flex items-center"
           style={{ color: 'var(--text-primary)' }}
         >
           <span className="text-base font-medium flex items-center gap-2">
@@ -63,7 +63,7 @@ export function PersonDetailsCard({ personId, notesCount }: PersonDetailsCardPro
         }}
       >
         <div
-          className="w-full px-4 py-4 flex items-center"
+          className="w-full px-4 pt-4 pb-2 flex items-center"
           style={{ color: 'var(--text-primary)' }}
         >
           <span className="text-base font-medium flex items-center gap-2">

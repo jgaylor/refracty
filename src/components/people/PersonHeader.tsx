@@ -44,8 +44,13 @@ export function PersonHeader({ person, onDelete }: PersonHeaderProps) {
 
   return (
     <>
-      <div className="mb-8">
-        <div className="flex items-center justify-between gap-4">
+      <div className="mb-6">
+        <div className="flex items-center gap-4">
+          {/* Avatar */}
+          <div className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center flex-shrink-0 text-xl font-medium">
+            {getInitials(person.name)}
+          </div>
+
           {/* Name */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3">
@@ -116,11 +121,6 @@ export function PersonHeader({ person, onDelete }: PersonHeaderProps) {
                 </div>
               )}
             </div>
-          </div>
-
-          {/* Avatar */}
-          <div className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center flex-shrink-0 text-xl font-medium">
-            {getInitials(person.name)}
           </div>
         </div>
       </div>

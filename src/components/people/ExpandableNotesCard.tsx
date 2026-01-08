@@ -35,12 +35,10 @@ export function ExpandableNotesCard({ personId, initialNotes, onNotesChange }: E
         const existingIds = new Set(prev.map(n => n.id));
         const newNotes = initialNotes.filter(note => !existingIds.has(note.id));
         const updated = [...newNotes, ...prev];
-        onNotesChangeRef.current?.(updated.length);
         return updated;
       }
       // When server confirms removals (fewer notes), replace state
       else if (hasRemovedNotes) {
-        onNotesChangeRef.current?.(initialNotes.length);
         return initialNotes;
       }
       return prev;
@@ -58,7 +56,6 @@ export function ExpandableNotesCard({ personId, initialNotes, onNotesChange }: E
           }
           // Add note to the beginning of the list
           const updated = [event.detail.note, ...prev];
-          onNotesChangeRef.current?.(updated.length);
           return updated;
         });
       }
@@ -70,6 +67,10 @@ export function ExpandableNotesCard({ personId, initialNotes, onNotesChange }: E
     };
   }, [personId]);
 
+  // Notify parent when notes count changes (after render phase)
+  useEffect(() => {
+    onNotesChangeRef.current?.(notes.length);
+  }, [notes.length]);
 
   const handleDeleteNote = async (noteId: string) => {
     setLoading(true);
@@ -84,7 +85,6 @@ export function ExpandableNotesCard({ personId, initialNotes, onNotesChange }: E
         // Optimistically remove the note
         setNotes((prev) => {
           const updated = prev.filter((note) => note.id !== noteId);
-          onNotesChangeRef.current?.(updated.length);
           return updated;
         });
         showSuccessToast('Note deleted');

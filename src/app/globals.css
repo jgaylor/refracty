@@ -18,6 +18,11 @@
     --shadow-color: rgba(0, 0, 0, 0.1);
     --link-color: #3b82f6;
     --scrollbar-width: 16px;
+    /* Button Primary Colors - Light Mode */
+    --button-primary-bg: #212121;
+    --button-primary-text: #ffffff;
+    --button-primary-hover: #1a1a1a;
+    --button-primary-focus: rgba(33, 33, 33, 0.5);
   }
 
   /* CSS Variables for Theming - Dark Mode */
@@ -34,6 +39,11 @@
     --border-color-light: #262626;
     --shadow-color: rgba(0, 0, 0, 0.3);
     --link-color: #60a5fa;
+    /* Button Primary Colors - Dark Mode (reversed) */
+    --button-primary-bg: #ffffff;
+    --button-primary-text: #212121;
+    --button-primary-hover: #e5e5e5;
+    --button-primary-focus: rgba(255, 255, 255, 0.5);
   }
 
   /* Safari backdrop-blur fix - makes background more opaque */
@@ -165,7 +175,15 @@
   }
 
   .btn-primary {
-    @apply btn bg-primary text-white hover:bg-primary-hover focus:ring-primary;
+    @apply btn;
+    background-color: var(--button-primary-bg);
+    color: var(--button-primary-text);
+  }
+  .btn-primary:hover {
+    background-color: var(--button-primary-hover);
+  }
+  .btn-primary:focus {
+    --tw-ring-color: var(--button-primary-focus);
   }
 
   .btn-secondary {
@@ -224,6 +242,11 @@
   }
   .input::placeholder {
     color: var(--text-tertiary);
+  }
+
+  /* Hide native placeholder when shimmer overlay is visible */
+  .input.placeholder-hidden::placeholder {
+    color: transparent;
   }
 
   /* Radio Buttons */
@@ -365,6 +388,33 @@
     }
     100% {
       background-position: -200% 0;
+    }
+  }
+
+  /* iOS-specific shimmer fixes */
+  .shimmer-ios-fix {
+    /* Force hardware acceleration on iOS */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    will-change: background-position;
+  }
+
+  /* Ensure animations work on touch devices */
+  @media (hover: none) and (pointer: coarse) {
+    .shimmer-ios-fix {
+      /* Force animation to run on touch devices */
+      animation-play-state: running !important;
+      -webkit-animation-play-state: running !important;
+    }
+  }
+
+  /* Fallback for when animations are disabled */
+  @media (prefers-reduced-motion: reduce) {
+    .shimmer-ios-fix {
+      animation: none;
+      background-position: 0% 0%;
     }
   }
 

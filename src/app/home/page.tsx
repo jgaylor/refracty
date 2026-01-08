@@ -11,7 +11,7 @@ async function HomePageContent() {
   return (
     <>
       <h1 className="text-3xl font-bold mb-2">Home</h1>
-      <p className="text-sm mb-8" style={{ color: 'var(--text-secondary)' }}>
+      <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
         All your notes in one place
       </p>
       <InsightsList initialItems={items} initialHasMore={hasMore} />
