@@ -615,6 +615,7 @@ export function Sidebar({ initialUser = null }: SidebarProps = {}) {
                   borderColor: 'var(--border-color)',
                   color: 'var(--text-primary)',
                 }}
+                suppressHydrationWarning
               />
             </div>
           )}
@@ -1207,6 +1208,7 @@ export function SidebarContent({ initialUser = null }: SidebarProps = {}) {
                   borderColor: 'var(--border-color)',
                   color: 'var(--text-primary)',
                 }}
+                suppressHydrationWarning
               />
             </div>
           )}

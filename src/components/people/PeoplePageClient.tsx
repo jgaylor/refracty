@@ -101,6 +101,7 @@ export function PeoplePageClient({ initialPeople }: PeoplePageClientProps) {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="input flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+            suppressHydrationWarning
           />
 
           <button

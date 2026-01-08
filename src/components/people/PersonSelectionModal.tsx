@@ -381,6 +381,7 @@ export function PersonSelectionModal({
               onKeyDown={handleKeyDown}
               className="input w-full pl-9 pr-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
               aria-label="Search people"
+              suppressHydrationWarning
               autoFocus={!isTouchDevice}
             />
           </div>

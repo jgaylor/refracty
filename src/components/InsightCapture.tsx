@@ -202,6 +202,7 @@ export function InsightCapture() {
                   handleSubmit();
                 }}
                 className="flex items-center gap-3"
+                suppressHydrationWarning
               >
                 <div className="flex-1 relative">
                   <input

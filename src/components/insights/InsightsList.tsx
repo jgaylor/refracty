@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FeedItem } from '@/lib/supabase/insights';
 import { InsightsListSkeleton } from './InsightsListSkeleton';
-import { IconButton } from '../IconButton';
 import { ConfirmDialog } from '../ConfirmDialog';
 import { showSuccessToast, showErrorToast } from '@/lib/toast';
 import { NoteItem } from '../people/NoteItem';
@@ -52,6 +51,32 @@ function formatRelativeTime(dateString: string): string {
 
   const diffInYears = Math.floor(diffInDays / 365);
   return `${diffInYears} year${diffInYears === 1 ? '' : 's'} ago`;
+}
+
+// Component to render relative time client-side only (prevents hydration mismatch)
+function RelativeTime({ dateString }: { dateString: string }) {
+  const [relativeTime, setRelativeTime] = useState('');
+
+  useEffect(() => {
+    // Only calculate on client after hydration
+    // Using setTimeout to defer state update slightly and avoid hydration mismatch
+    const updateTime = () => {
+      setRelativeTime(formatRelativeTime(dateString));
+    };
+    
+    // Defer initial update to next tick to ensure hydration is complete
+    const timeoutId = setTimeout(updateTime, 0);
+    
+    // Update every minute for recent items to keep "just now" / "X minutes ago" accurate
+    const interval = setInterval(updateTime, 60000);
+    
+    return () => {
+      clearTimeout(timeoutId);
+      clearInterval(interval);
+    };
+  }, [dateString]);
+
+  return <>{relativeTime || '...'}</>;
 }
 
 export function InsightsList({ initialItems, initialHasMore }: InsightsListProps) {
@@ -229,7 +254,7 @@ export function InsightsList({ initialItems, initialHasMore }: InsightsListProps
                       {item.person.name}
                     </Link>
                     <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                      {formatRelativeTime(item.created_at)}
+                      <RelativeTime dateString={item.created_at} />
                     </span>
                   </div>
                 </div>

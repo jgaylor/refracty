@@ -63,6 +63,26 @@ export function NoteItem({
   borderTop = false,
 }: NoteItemProps) {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [relativeTime, setRelativeTime] = useState('');
+
+  // Calculate relative time on client side only (after hydration)
+  useEffect(() => {
+    // Using setTimeout to defer state update slightly and avoid hydration mismatch
+    const updateTime = () => {
+      setRelativeTime(formatRelativeTime(note.created_at));
+    };
+    
+    // Defer initial update to next tick to ensure hydration is complete
+    const timeoutId = setTimeout(updateTime, 0);
+    
+    // Update every minute for recent items to keep "just now" / "X minutes ago" accurate
+    const interval = setInterval(updateTime, 60000);
+    
+    return () => {
+      clearTimeout(timeoutId);
+      clearInterval(interval);
+    };
+  }, [note.created_at]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -115,7 +135,7 @@ export function NoteItem({
               </Link>
             )}
             <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-              {formatRelativeTime(note.created_at)}
+              {relativeTime || '...'}
             </span>
           </div>
         </div>

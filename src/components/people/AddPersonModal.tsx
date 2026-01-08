@@ -122,7 +122,7 @@ export function AddPersonModal({ isOpen, onClose, onPersonAdded }: AddPersonModa
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-6 space-y-6" suppressHydrationWarning>
           {/* Name */}
           <div>
             <label htmlFor="name" className="label block text-sm font-medium mb-2">
@@ -137,6 +137,7 @@ export function AddPersonModal({ isOpen, onClose, onPersonAdded }: AddPersonModa
               placeholder="Enter their name"
               disabled={loading}
               className="input w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              suppressHydrationWarning
             />
           </div>
 
@@ -146,6 +147,7 @@ export function AddPersonModal({ isOpen, onClose, onPersonAdded }: AddPersonModa
               First Note <span className="text-neutral-400 text-xs">(Optional)</span>
             </label>
             <textarea
+              suppressHydrationWarning
               id="first-note"
               value={firstNote}
               onChange={(e) => setFirstNote(e.target.value)}
