@@ -4,38 +4,22 @@ import { SkeletonText, SkeletonBox } from '../skeletons/SkeletonComponents';
 
 export function PersonDetailSkeleton() {
   return (
-    <div>
+    <div className="space-y-6">
       {/* Header skeleton */}
-      <div className="mb-8">
-        <div className="flex items-start justify-between gap-4">
-          {/* Name and Summary */}
+      <div>
+        <div className="flex items-center gap-4">
+          {/* Avatar skeleton */}
+          <SkeletonBox style={{ width: '4rem', height: '4rem', borderRadius: '50%', flexShrink: 0 }} />
+          {/* Name */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-3">
               <SkeletonText width="200px" height="2rem" />
             </div>
-            <SkeletonText width="300px" height="1.25rem" />
           </div>
-          {/* Avatar skeleton */}
-          <SkeletonBox style={{ width: '4rem', height: '4rem', borderRadius: '50%' }} />
         </div>
       </div>
 
       {/* Expandable Notes Card skeleton */}
-      <div className="mb-6">
-        <div
-          className="rounded-lg border"
-          style={{
-            backgroundColor: 'var(--bg-primary)',
-            borderColor: 'var(--border-color)',
-          }}
-        >
-          <div className="px-4 py-4">
-            <SkeletonText width="180px" height="1.25rem" />
-          </div>
-        </div>
-      </div>
-
-      {/* Insights Content skeleton - Single card */}
       <div
         className="rounded-lg border"
         style={{
@@ -43,22 +27,36 @@ export function PersonDetailSkeleton() {
           borderColor: 'var(--border-color)',
         }}
       >
-        {Array.from({ length: 5 }).map((_, categoryIndex) => (
+        <div className="w-full px-4 py-4 flex items-center">
+          <SkeletonText width="180px" height="1rem" />
+        </div>
+      </div>
+
+      {/* Person Details Card skeleton */}
+      <div
+        className="rounded-lg border"
+        style={{
+          backgroundColor: 'var(--bg-primary)',
+          borderColor: 'var(--border-color)',
+        }}
+      >
+        {Array.from({ length: 3 }).map((_, sectionIndex) => (
           <div
-            key={categoryIndex}
-            className={`px-4 py-4 ${categoryIndex > 0 ? 'border-t' : ''}`}
+            key={sectionIndex}
+            className={sectionIndex > 0 ? 'border-t' : ''}
             style={{
-              borderColor: categoryIndex > 0 ? 'var(--border-color)' : 'transparent',
+              borderColor: sectionIndex > 0 ? 'var(--border-color)' : 'transparent',
             }}
           >
-            <div className="flex items-center justify-between mb-3">
-              <SkeletonText width="180px" height="0.75rem" />
+            {/* Section header */}
+            <div
+              className="w-full px-4 pt-4 pb-2 flex items-center"
+            >
+              <SkeletonText width="180px" height="1rem" />
             </div>
-            <div className="space-y-2">
-              <SkeletonText width="100%" height="1.125rem" />
-              {categoryIndex % 2 === 0 && (
-                <SkeletonText width="85%" height="1.125rem" />
-              )}
+            {/* Section content */}
+            <div className="px-4 pb-4">
+              <SkeletonText width="100%" height="0.875rem" />
             </div>
           </div>
         ))}
